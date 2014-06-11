@@ -1,0 +1,89 @@
+{
+  "environment":{
+    "tcp_timeout":30,
+    "Sniffer":"off",
+    "SLEEP_TIME": 1
+  },
+
+  "dns":{
+    "DNS_PORT": 5333,
+    "DNS_HOST": "10.101.81.12",
+    "DNS_TYPE": "UDP",
+    "DB_HOST" : "10.101.81.12",
+    "DB_USER" : "root",
+    "DB_PASS" : "welcome",
+    "DB_PORT" : 3306,
+    "DB_DATABASE": "dns_config",
+    "Pharos_org": "config/pharos/pharos.conf",
+    "pharos_dst": "/home/admin/pharos/conf/pharos.conf",
+    "dbinit_org": "config/pharos/dns.sql",
+    "dbinit_dst": "/home/admin/pharos/conf/dns.sql",
+    "create_org": "config/pharos/create_table.sql",
+    "create_dst": "/home/admin/pharos/conf/create_table.sql",
+    "stored_org": "config/pharos/ph_stored_routines.sql",
+    "stored_dst": "/home/admin/pharos/conf/ph_stored_routines.sql",
+    "proced_org": "config/pharos/callProcedure.sql",
+    "proced_dst": "/home/admin/pharos/conf/callProcedure.sql",
+    "Has_Setup" : "False",
+    "DNS_TIMESTAMP": "%Y-%m-%d %H:%M:%S"
+  },
+  "tcheck": {
+    "master": {
+      "DNS_HOST": "10.101.81.12",
+      "DNS_PORT": 5333,
+      "DNS_TYPE": "UDP",
+      "DB_HOST" : "10.101.81.12",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "dns_config"
+    },
+    "slave1": {
+      "DNS_HOST": "10.235.160.73",
+      "DNS_PORT": 5333,
+      "DNS_TYPE": "UDP",
+      "DB_HOST" : "10.235.160.73",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "dns_config"
+    },
+    "slave2": {
+      "DNS_HOST": "10.235.160.83",
+      "DNS_PORT": 5333,
+      "DNS_TYPE": "UDP",
+      "DB_HOST" : "10.235.160.83",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "dns_config"
+    },
+    "slave3": {
+      "DNS_HOST": "10.235.160.93",
+      "DNS_PORT": 5333,
+      "DNS_TYPE": "UDP",
+      "DB_HOST" : "10.235.160.93",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "dns_config"
+    }
+  },
+  "vs": {
+    "vs1": {
+      "ip_addr": "10.235.160.93",
+      "port"   : 8008,
+      "uri"    : "/status"
+    },
+    "vs2": {
+      "ip_addr": "10.235.160.83",
+      "port"   : 8008,
+      "uri"    : "/status"
+    },
+    "vs3": {
+      "ip_addr": "10.235.160.93",
+      "port"   : 8008,
+      "uri"    : "/status"
+    }
+  }
+}

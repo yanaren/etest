@@ -1,0 +1,33 @@
+#region.user
+region_db user {
+        region {
+        name "region_A"
+        10.232.129.0/24
+        }
+
+        region {
+        name "region_D"
+        10.232.31.0/24
+        }
+
+        region {
+        name "region_B"
+        "region_D"
+        }
+
+        region {
+        name "region_C"
+        "region_B"
+        }
+
+        region {
+        name "comple_region_D"
+        !"region_D"
+        }
+
+        region {
+        name "region_E"
+        10.10.0.0/14
+        }
+
+}

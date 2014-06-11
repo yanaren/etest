@@ -1,0 +1,68 @@
+# global section
+global
+        # Process management and security
+        chroot  /var/run
+        user    nobody
+        group   nobody
+        log     127.0.0.1       local0 info
+        nbproc  1
+        pidfile /var/run/haproxy.pid
+        stats socket /var/run/haproxy.stat user nobody group nobody mode 666 
+        # Performance tuning
+        maxconn 6335
+        nopoll
+        nosepoll
+        nosplice
+        spread-checks   3       50%
+        ecc-console-addr 114.80.174.157:8080
+
+# default section
+defaults
+        log     global
+        mode    http
+
+        # log option set
+        option  dontlog-normal
+        option  dontlognull
+
+        # stats
+        stats   uri     /admin?stats
+
+        # err handle
+        #errorfile 404 /home/a/conf/pic_notfound.png
+
+        # timeout set
+        timeout client  5000
+        timeout connect 5000
+        timeout server  5000
+
+
+# frontend section
+frontend web_proxy
+        bind    0.0.0.0:80
+        default_backend edge_cache_servers
+
+        # connect option set
+        #option  httpclose
+        # front
+        option http-server-close
+        # backend
+        option http-pretend-keepalive
+        option http-srv-kpa
+        maxconn 6335
+
+
+# backend section
+backend edge_cache_servers
+        option  srvtcpka
+
+        # balance policy
+        hash-type       consistent
+        balance         uri
+                #option httpchk GET /health.gif HTTP/1.1\r\nHost:\ img01.taobaocdn.com
+                #http-check expect rstatus 200|404
+
+        #server list
+server  port81.kftest10-vm4.sqa.cm4.tbsite.net 10.232.129.111:81 id 1003 weight 32 check port 81 inter 3000 fall 4
+server  port82.kftest10-vm4.sqa.cm4.tbsite.net 10.232.129.111:82 id 1004 weight 32 check port 82 inter 3000 fall 4
+

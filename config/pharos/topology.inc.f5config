@@ -1,0 +1,8 @@
+topology {
+        pool."region_A_pool"  user."region_A"     1005
+        pool."region_A_pool"  user."region_B"     1500
+        pool."region_C_pool"  user."region_C"     1600
+        pool."region_B_pool"  !user."region_D"    1400
+        pool."region_C_pool"  user."comple_region_D" 1500
+        pool."region_A_pool"  user."region_E"     2000
+}

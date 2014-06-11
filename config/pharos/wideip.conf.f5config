@@ -1,0 +1,167 @@
+#wideip.conf
+datacenter {
+        name "vscluster1"
+        location "beijingnet"
+        contact "dengwu@taobao.com"
+        server "kftest8-vm4.sqa.cm4"
+        server "vkvm129108.sqa.cm4"
+        server  "vkvm129109.sqa.cm4"
+}
+
+server { //kftest8-vm4.sqa.cm4  vs1
+   name            "kftest8-vm4.sqa.cm4"
+   type            generic
+   box {
+      address 1.1.1.1
+      unit_id 1
+   }
+   monitor "tcp"
+   vs {
+      name            "vs1.pharos"
+      address         10.232.129.104:80 // http
+   }
+}
+
+server { //vkvm129108.sqa.cm4  vs2
+   name            "vkvm129108.sqa.cm4"
+   type            generic
+   box {
+      address 1.1.1.1
+      unit_id 1
+   }
+   monitor "tcp"
+   vs {
+      name            "vs2.pharos"
+      address         10.232.129.108:80 // http
+   }
+}
+
+server { //vkvm129109.sqa.cm4  vs3
+   name            "vkvm129109.sqa.cm4"
+   type            generic
+   box {
+      address 1.1.1.1
+      unit_id 1
+   }
+   monitor "tcp"
+   vs {
+      name            "vs3.pharos"
+      address         10.232.129.109:80 // http
+   }
+}
+
+server { //nothisserver.sqa.cm4  vs4
+   name            "nothisserver.sqa.cm4"
+   type            generic
+   box {
+      address 1.1.1.1
+      unit_id 1
+   }
+   monitor "tcp"
+   vs {
+      name            "nothisserver.pharos"
+      address         10.235.222.8:88 // http
+   }
+}
+
+server { 
+   name            "192.168.1.1"
+   type            generic
+   box {
+      address 192.168.1.1
+      unit_id 1
+   }
+   monitor "tcp"
+   vs {
+      name            "192.168.1.1"
+      address         192.168.1.1:88 // http
+   }
+}
+pool {
+   name           "region_A_pool"
+   ttl            100
+   monitor all "tcp"
+   rr_ldns_limit  1
+   preferred      ratio
+   fallback       topology
+   partition "Common"
+
+   member         10.232.129.104:80
+}
+
+pool {
+	name           "no_member_pool"
+    ttl            100
+    monitor all "tcp"
+    rr_ldns_limit  1
+    preferred      ratio
+    fallback       topology
+    partition "Common"
+
+   
+}
+
+pool {
+	name           "member_disabled_pool"
+    ttl            100
+    monitor all "tcp"
+    rr_ldns_limit  1
+    preferred      ratio
+    fallback       topology
+    partition "Common"
+
+   member {
+      address       192.168.1.1:88
+      disabled
+      partition "Common"
+   }
+   
+}
+
+
+pool {
+   name           "region_B_pool"
+   ttl            200
+   monitor all "tcp"
+   rr_ldns_limit  5
+   preferred      ratio
+   fallback       topology
+   partition "Common"
+
+   member         10.232.129.108:80
+}
+
+pool {
+   name           "cname_pool"
+   ttl            300
+   cname          "img.gslb.tbcache.com"
+   monitor all "tcp"
+   rr_ldns_limit  8
+   preferred      rr
+   partition "Common"
+}
+
+
+pool {
+   name           "region_C_pool"
+   ttl            901
+   monitor all "tcp"
+   rr_ldns_limit  41
+   preferred      ratio
+   fallback       topology
+   partition "Common"
+
+   member         10.232.129.109:80
+}
+
+wideip {
+   name         "img01.taobaocdn.com"
+   pool_lbmode  topology
+   ipv6_noerror yes
+   partition "Common"
+   last resort pool "pics_tel_pool"
+   pool         "region_A_pool"
+   pool         "region_B_pool"
+   pool         "region_C_pool"
+
+}
