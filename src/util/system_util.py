@@ -3,12 +3,7 @@ Created on 2013-2-5
 
 @author:wangguangping
 '''
-import subprocess
-import time
-#from alitest import logger
-import hashlib
-import os
-import mmap
+import subprocess, time, hashlib, os, mmap
 
 
 def execute_cmd(cmd):
@@ -51,7 +46,6 @@ def exe_cmd_via_staff(ip, cmd):
     staff_cmd = 'staf %s process start SHELL COMMAND %s WAIT RETURNSTDOUT STDERRTOSTDOUT' % (ip, cmd)
     (returncode, output, stderr) = execute_cmd(staff_cmd)
     print 'Execute command: \"%s\" on host: \"%s\"' % (cmd, ip)
-    print returncode
     return (returncode == 0)
 
 
@@ -59,8 +53,8 @@ def copy_file_2_server(ip, srcfile, dstfile):
     (_, username, _) = execute_cmd('whoami')
     if username[-1] == '\n':
         username = username[0:-1]
-
-    cmd = 'scp %s %s@%s:%s' % (srcfile, username, ip, dstfile)
+    #cmd = 'scp %s %s@%s:%s' % (srcfile, username, ip, dstfile)
+    cmd = 'scp %s root@%s:%s' % (srcfile, ip, dstfile)
     (returncode, output, stderr) = execute_cmd(cmd)
     return (returncode == 0)
 

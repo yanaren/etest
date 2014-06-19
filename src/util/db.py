@@ -1,15 +1,15 @@
 
 import MySQLdb as mdb
-from src.deploy import DNS
+from src.deploy import DB
 
-def execute(sql):
+def execute(DB, sql):
     con = None
     try:
-        con = mdb.connect(host=DNS['DB_HOST'],
-                          user=DNS['DB_USER'],
-                          passwd=DNS['DB_PASS'],
-                          db=DNS['DB_DATABASE'],
-                          port=DNS['DB_PORT']);
+        con = mdb.connect(host=DB['DB_HOST'],
+                          user=DB['DB_USER'],
+                          passwd=DB['DB_PASS'],
+                          db=DB['DB_DATABASE'],
+                          port=DB['DB_PORT']);
 
         cur = con.cursor()
         cur.execute(sql)
@@ -25,11 +25,11 @@ def execute(sql):
 def callproc(callname, args):
     con = None
     try:
-        con = mdb.connect(host=DNS['DB_HOST'],
-                          user=DNS['DB_USER'],
-                          passwd=DNS['DB_PASS'],
-                          db=DNS['DB_DATABASE'],
-                          port=DNS['DB_PORT']);
+        con = mdb.connect(host=DB['DB_HOST'],
+                          user=DB['DB_USER'],
+                          passwd=DB['DB_PASS'],
+                          db=DB['DB_DATABASE'],
+                          port=DB['DB_PORT']);
 
         cur = con.cursor()
         cur.callproc(callname, args)

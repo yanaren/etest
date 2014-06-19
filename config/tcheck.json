@@ -1,0 +1,69 @@
+{
+  "environment":{
+    "tcp_timeout":30,
+    "Sniffer":"off",
+    "SLEEP_TIME": 1
+  },
+  "tcheck": {
+    "master": {
+      "TC_HOST": "10.101.81.12",
+      "TC_PORT": 5333,
+      "TC_TYPE": "UDP",
+      "DB_HOST" : "10.101.81.12",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "tcheck_db"
+    },
+    "slave1": {
+      "TC_HOST": "10.235.160.63",
+      "TC_PORT": 5333,
+      "TC_TYPE": "UDP",
+      "DB_HOST" : "10.235.160.63",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "tcheck_db"
+    },
+    "slave2": {
+      "TC_HOST": "10.235.160.73",
+      "TC_PORT": 5333,
+      "TC_TYPE": "UDP",
+      "DB_HOST" : "10.235.160.73",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "tcheck_db"
+    },
+    "slave3": {
+      "TC_HOST": "10.235.160.83",
+      "TC_PORT": 5333,
+      "TC_TYPE": "UDP",
+      "DB_HOST" : "10.235.160.83",
+      "DB_USER" : "root",
+      "DB_PASS" : "welcome",
+      "DB_PORT" : 3306,
+      "DB_DATABASE": "tcheck_db"
+    }
+  },
+  "vs": {
+    "vs1": {
+      "ip_addr": "10.235.160.66",
+      "port"   : 8008,
+      "uri"    : "/status"
+    },
+    "vs2": {
+      "ip_addr": "10.235.160.76",
+      "port"   : 8008,
+      "uri"    : "/status"
+    },
+    "vs3": {
+      "ip_addr": "10.235.160.86",
+      "port"   : 8008,
+      "uri"    : "/status"
+    }
+  },
+  "cmd": {
+    
+  }
+}

@@ -11,9 +11,9 @@ Function:
 '''
 import thread, socket, struct, time
 import src.util.system_util as system_util
-import src.util.db as db
-from src.util.logger import logger
-from src.deploy import DNS, TCHECK, VS
+import src.util.db          as db
+from   src.util.logger      import logger
+from   src.deploy           import DNS, TCHECK, VS
 
 
 vs_conf      = {}
@@ -31,72 +31,58 @@ def parse_vs(config):
     vs_num = len(vs)
     for i in vs:
         name = i
-
         if vs[i].has_key('vs_ip'):
             ip = vs[i]['vs_ip']
         else:
             ip = '10.235.160.53'
-
         if vs[i].has_key('address_type'):
             address_type = vs[i]['address_type']
         else:
             address_type = 1
-
         if vs[i].has_key('vs_port'):
             port = vs[i]['vs_port']
         else:
             port = 80
-
         if vs[i].has_key('host_name'):
             host_name = vs[i]['host_name']
         else:
             host_name = 'vkvm160053.sqa.cm6'
-
         if vs[i].has_key('in_use'):
             in_use = vs[i]['in_use']
         else:
             in_use = 1
-
         if vs[i].has_key('no_check'):
             no_check = vs[i]['no_check']
         else:
             no_check = 0
-
         if vs[i].has_key('available'):
             available = vs[i]['available']
         else:
             available = 1
-
         if vs[i].has_key('HC_type'):
             HC_type = vs[i]['HC_type']
         else:
             HC_type = 0
-
         if vs[i].has_key('itvl'):
             itvl = vs[i]['itvl']
         else:
             itvl = 60
-
         if vs[i].has_key('timeout'):
             timeout = vs[i]['timeout']
         else:
             timeout = 60
-
         if vs[i].has_key('retries'):
             retries = vs[i]['retries']
         else:
             retries = 3
- 
         if vs[i].has_key('host'):
             host = vs[i]['host']
         else:
             host = host_name
-
         if vs[i].has_key('url'):
             url = vs[i]['url']
         else:
             url = '/status'
-
         vs_item = {'vs_ip': ip, 'address_type': address_type, 'vs_port': port, 'host_name': host_name,
                    'in_use': in_use, 'no_check': no_check, 'available': available, 'HC_type': HC_type, 
                    'itvl':itvl, 'timeout':timeout, 'retries': retries, 'host': host, 'url':url}
@@ -110,43 +96,35 @@ def parse_pool(config):
     pool_num = len(pool)
     for i in pool:
         name = i
-
         if pool[i].has_key('rr_ldns_limit'):
             limit = pool[i]['rr_ldns_limit']
         else:
             limit = 1
-
         if pool[i].has_key('in_use'):
             in_use = pool[i]['in_use']
         else:
             in_use = 1
-
         if pool[i].has_key('available'):
             available = pool[i]['available']
         else:
             available = 1
-
         if pool[i].has_key('a6_available'):
             a6_available = pool[i]['a6_available']
         else:
             a6_available = 0
-
         if pool[i].has_key('ttl'):
             ttl = pool[i]['ttl']
         else:
             ttl = 1
-
         if pool[i].has_key('QueryType'):
             if pool[i]['QueryType'] == 'A':
                 type = 1
         else:
             type = 1
-
         if pool[i].has_key('vs'):
             vs = pool[i]['vs']
         else:
             vs = []
-
         pool_item = {'rr_ldns_limit': limit, 'in_use': in_use, 'available': available, 
                      'a6_available':a6_available, 'ttl':ttl, 'QueryType':type, 'vs': vs}
         pool_conf[name] = pool_item
@@ -158,17 +136,14 @@ def parse_region(config):
     region_num = len(region)
     for i in region:
         name = i
-
         if region[i].has_key('range'):
             rang = region[i]['range']
         else:
             rang = []
-
         if region[i].has_key('pool'):
             pool = region[i]['pool']
         else:
             pool = []
-
         region_item = {'range': rang, 'pool': pool}
         region_conf[name] = region_item
 
@@ -179,40 +154,20 @@ def parse_wideip(config):
     wideip_num = len(wideip)
     for i in wideip:
         name = i
-
         if wideip[i].has_key('url'):
             url = wideip[i]['url']
         else:
             url = 'img01.taobaocdn.com.danuoyi.tbcache.com'
-
         if wideip[i].has_key('pool'):
             pool = wideip[i]['pool']
         else:
             pool = []
-
         if wideip[i].has_key('in_use'):
             in_use = wideip[i]['in_use']
         else:
             in_use = 1
-
         wideip_item = {'url': url, 'pool': pool, 'in_use': in_use}
         wideip_conf[name] = wideip_item
-
-def parse_tcheck(config):
-    global tcheck_master, tcheck_slave, rs_list
-    if config.has_key('tcheck'):
-        tcheck = config['tcheck']
-    else:
-        return 'True'
-
-    for tc in tcheck['checker']:
-        if tc == 'master':
-            tcheck_master[tc] = TCHECK[tc]
-        else:
-            tcheck_slave[tc] = TCHECK[tc]
-
-    for rs in tcheck['vs']:
-        rs_list.append(rs)
 
 
 # parse configuration for DB setting
@@ -221,7 +176,6 @@ def parse(config):
     parse_pool(config)
     parse_region(config)
     parse_wideip(config)
-    parse_tcheck(config)
     return 'True'
 
 
@@ -319,52 +273,6 @@ def initPharos():
     system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], '/usr/bin/mysql -uroot -pwelcome < /home/admin/pharos/conf/ph_stored_routines.sql')
     return 'True'
 
-def initTcheck():
-
-    if tcheck_master == {} and tcheck_master == {}:
-        return 'True'
-
-    ips = []; ips_rs = []
-    for slave in tcheck_slave:
-        ips.append(tcheck_slave[slave]['DNS_HOST'])
-    for rs in rs_list:
-        ips_rs.append(VS[rs]['ip_addr'])
-
-    checkDBRunning([tcheck_master['master']['DNS_HOST']])
-    checkDBRunning(ips)
-
-    #checkTcheck(ips)
-
-    stopNginx(ips_rs)
-    startNginx(ips_rs)
-
-    return 'True'
-
-
-def stopNginx(ips):
-    cmd = '/usr/local/nginx/sbin/nginx -s stop'
-    for ip in ips:
-        system_util.exe_cmd_via_ssh(ip, cmd)
-
-def stopvs(vss):
-    ips = []
-    for vs in vss:
-        ips.append(VS[vs]['ip_addr'])
-    stopNginx(ips)
-    time.sleep(90)
-
-def startNginx(ips):
-    cmd = '/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf'
-    for ip in ips:
-        system_util.exe_cmd_via_ssh(ip, cmd)
-
-def startvs(vss):
-    ips = []
-    for vs in vss:
-        ips.append(VS[vs]['ip_addr'])
-    startNginx(ips)
-    time.sleep(90)
-
 def stopPharos():
     cmd = 'killall -9 pharos'
     system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], cmd)
@@ -397,10 +305,6 @@ def deploy(config):
     # copy config file, initial db 
     logger.debug("# Deploy # copy file, initail db...")
     if initPharos() != 'True':
-        return 'False'
-
-    logger.debug("# Deploy # initail tcheck...")
-    if initTcheck() != 'True':
         return 'False'
 
     logger.debug("# Deploy # save config db...")

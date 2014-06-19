@@ -44,6 +44,10 @@ def send_raw_dns(data, input, check):
     return True
 
 
+#
+# config = {'vs': {}, 'pool': {}, 'region': {}, 'wideip': {}}
+# dns={ 'qd':[{'qd_qname':'img01.taobaocdn.com.danuoyi.tbcache.com'}] }
+# check = { 'an_rdata': [('10.235.160.93', 1)]}
 def do_dns(config, input, check, times=1):
     logger.debug("# Test # sleep 3 second wait pharos stable...")
     time.sleep(3)

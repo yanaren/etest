@@ -36,7 +36,13 @@ class RuntimeConfig(object):
 
 CONFIG=RuntimeConfig().config
 
-ENV   = CONFIG['environment']
-DNS   = CONFIG['dns']
-TCHECK= CONFIG['tcheck']
-VS    = CONFIG['vs']
+if CONFIG.has_key('environment'):
+    ENV   = CONFIG['environment']
+if CONFIG.has_key('dns'):
+    DNS   = CONFIG['dns']
+    DB    = DNS
+if CONFIG.has_key('tcheck'):
+    TCHECK= CONFIG['tcheck']
+    DB    = {}
+if CONFIG.has_key('vs'):
+    VS    = CONFIG['vs']
