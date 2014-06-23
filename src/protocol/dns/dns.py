@@ -1,86 +1,56 @@
+#create by 2014.05
+#author junbao.kjb
+#
+#DNS send and parser
+#
+
 import ConfigParser, select, socket, json, time, os, re, struct, types
 import src.protocol.alisocket as alisocket
 import src.util.data_util     as data_util
-import src.deploy.pharos      as deploy
 from   src.deploy             import ENV, DNS
 from   src.util.logger        import logger
 
 
 RECVBUFFER = 4096
 
-    
-def send_raw_dns(data, input, check):
-    time.sleep(3)
-    # Parse config
+
+# input={ 'DNS_HOST': DNS['DNS_HOST'], 'DNS_PORT': DNS['DNS_PORT'], 'DNS_TYPE': DNS['DNS_TYPE'], 'data': data}  or
+# input={ 'DNS_HOST': DNS['DNS_HOST'], 'DNS_PORT': DNS['DNS_PORT'], 'DNS_TYPE': DNS['DNS_TYPE'], 'id': 1, 'qr': 0, 
+#         'opcode':0,'aa': 0,'tc':0,'rd':1,'ra':0,'z':0,'rcode':0,'qdcount': 1,'ancount':0,'nscount':0,'arcount': 0, 
+#         'qd':[{'qd_qname':'img01.taobaocdn.com.danuoyi.tbcache.com', 'qd_qtype': 1, 'qd_qclass': 1}] },
+#         'an':[{'an_rclass': 1, 'an_ttl':1, 'an_rrname': 'www.taobao.com', 'an_rdata': '1.1.1.1', 'an_type': 1}]
+#
+# check = { 'qdcount':>2, 'an_rclass':1, 'an_rdata': [('10.235.160.93', 0.5), ('10.235.160.83', 0.5)]}
+def do_dns(input, check, times=1):
+    RDATA_NUM={}; Total_DNS = 0; result = True
+    resp = ''; server_ip = ''; server_port = 53; dns_type = 'UDP'
     if input.has_key('DNS_HOST'):
         server_ip=input['DNS_HOST']
     else:
         server_ip = DNS['DNS_HOST']
-
     if input.has_key('DNS_PORT'):
         server_port=input['DNS_PORT']
     else:
         server_port = DNS['DNS_PORT']
-
     if input.has_key('DNS_TYPE'):
-        sockettype = input['DNS_TYPE']
+        dns_type = input['DNS_TYPE']
     else:
-        sockettype = DNS['DNS_TYPE']
-    
-    resp = alisocket.send_packet(data, ('', '', server_ip, server_port, sockettype))
+        dns_type = DNS['DNS_TYPE']
+    logger.debug('# Test # start to send DNS query to:' + server_ip + ':' + str(server_port) + ' for '+ str(times) + ' times...')
 
-    dns = DNSPacket(resp, type)
-    for item in check:
-        func = getattr(dns, 'get_'+item)
-        ans = func()
-        if -1 == item.find('_'):
-            return (ans == check[item])
-        else:
-            for expect in check[item]:
-                try:
-                    pos = ans.index(expect)
-                except:
-                    return False
-    return True
-
-
-#
-# config = {'vs': {}, 'pool': {}, 'region': {}, 'wideip': {}}
-# dns={ 'qd':[{'qd_qname':'img01.taobaocdn.com.danuoyi.tbcache.com'}] }
-# check = { 'an_rdata': [('10.235.160.93', 1)]}
-def do_dns(config, input, check, times=1):
-    logger.debug("# Test # sleep 3 second wait pharos stable...")
-    time.sleep(3)
-    resp = ''
-    logger.debug("# Test # start to send DNS query...")
-
-    RDATA_NUM={}; Total_DNS = 0; result = True
+    # send DNS query for times
     for i in range(0, times):
-        if type(input) is str:
-            if config.has_key('DNS_HOST'):
-                server_ip=config['DNS_HOST']
-            else:
-                server_ip = DNS['DNS_HOST']
-
-            if config.has_key('DNS_PORT'):
-                server_port=config['DNS_PORT']
-            else:
-                server_port = DNS['DNS_PORT']
- 
-            if config.has_key('DNS_TYPE'):
-                dns_type = config['DNS_TYPE']
-            else:
-                dns_type = DNS['DNS_TYPE']
-            resp = alisocket.send_packet(input, ('', '', server_ip, server_port, dns_type))
+        # send raw data
+        if input.has_key('data'):
+            resp = alisocket.send_packet(input['data'], ('', '', server_ip, server_port, dns_type))
+        # send fromat dns data
         else:
             resp = send_dns(input)
-            if input.has_key('dnstype'):
-                dns_type=input['dnstype']
-            else:
-                dns_type='UDP'
 
+        # decode DNS packet
         dns = DNSPacket(resp, dns_type)
         for item in check:
+            # check an_rdata (special)
             if item == 'an_rdata':
                 func = getattr(dns, 'get_'+item)
                 ans = func()
@@ -89,6 +59,7 @@ def do_dns(config, input, check, times=1):
                         RDATA_NUM[data] += 1
                     else:
                         RDATA_NUM[data] = 1
+            # simple logical with '> < !='
             else:
                 func = getattr(dns, 'get_'+item)
                 ans = func()
@@ -104,7 +75,7 @@ def do_dns(config, input, check, times=1):
                             return False
                     elif ans != check[item]:
                         return False
-                        
+                #
                 else:
                     for expect in check[item]:
                         try:
@@ -124,99 +95,81 @@ def do_dns(config, input, check, times=1):
     return result
 
 
-'''
-DNS query format:
--- ID             -- (16 bits)
--- Flags          -- (16 bits: qr(15) + opcode(14-11) + aa(10) + tc(9) + rd(8) + ra(7) + z(6-4) + rcode(3-0))
--- qd             -- (16 bits)
--- an             -- (16 bits)
--- ns             -- (16 bits)
--- ar             -- (16 bits)
-'''
+
+#DNS query format:
+#-- ID             -- (16 bits)
+#-- Flags          -- (16 bits: qr(15) + opcode(14-11) + aa(10) + tc(9) + rd(8) + ra(7) + z(6-4) + rcode(3-0))
+#-- qd             -- (16 bits)
+#-- an             -- (16 bits)
+#-- ns             -- (16 bits)
+#-- ar             -- (16 bits)
 # input = {'id': 1, 'qr':1, 'qd':[{'qd_qname':'www.taobao.com', 'qd_qtype':1}]}
 def send_dns(input):
-
-    # Parse config
+    # Parse dns query
     if input.has_key('DNS_HOST'):
         server_ip=input['DNS_HOST']
     else:
         server_ip = DNS['DNS_HOST']
-
     if input.has_key('DNS_PORT'):
         server_port=input['DNS_PORT']
     else:
         server_port = DNS['DNS_PORT']
-
     if input.has_key('DNS_TYPE'):
         sockettype = input['DNS_TYPE']
     else:
         sockettype = DNS['DNS_TYPE']
-
     if input.has_key('dnstype'):
         dns_type=input['dnstype']
     else:
         dns_type='UDP'
-
     if input.has_key('id'):
         id=input['id']
     else:
         id=int(data_util.gen_str("<d,4>"))
-   
     if input.has_key('qr'):
         qr=input['qr']
     else:
         qr=0
-
     if input.has_key('opcode'):
         opcode=input['opcode']
     else:
         opcode=0
-
     if input.has_key('aa'):
         aa=input['aa']
     else:
         aa=0
-
     if input.has_key('tc'):
         tc=input['tc']
     else:
         tc=0
-
     if input.has_key('rd'):
         rd=input['rd']
     else:
         rd=1
-
     if input.has_key('ra'):
         ra=input['ra']
     else:
         ra=0
-
     if input.has_key('z'):
         z=input['z']
     else:
         z=0
-
     if input.has_key('rcode'):
         rcode=input['rcode']
     else:
         rcode=0
-
     if input.has_key('qdcount'):
         qdcount=input['qdcount']
     else:
         qdcount=1
-
     if input.has_key('ancount'):
         ancount=input['ancount']
     else:
         ancount=0
-
     if input.has_key('nscount'):
         nscount=input['nscount']
     else:
         nscount=0
-
     if input.has_key('arcount'):
         arcount=input['arcount']
     else:
@@ -267,27 +220,22 @@ def send_dns(input):
             an_rclass=an_item['an_rclass']
         else:
             an_rclass=1
-
         if an_item.has_key('an_ttl'):
             an_ttl=an_item['an_ttl']
         else:
             an_ttl=1
-
         if an_item.has_key('an_rrname'):
             an_rrname=an_item['an_rrname']
         else:
             an_rrname='www.taobao.com'
-
         if an_item.has_key('an_rdata'):
             an_rdata=an_item['an_rdata']
         else:
             an_rrname='1.1.1.1'
-
         if an_item.has_key('an_type'):
             an_type=an_item['an_type']
         else:
             an_type=1
-
         data += data_util.name2str(qd_qname)
         data+=data_util.bytes2str([(qd_qtype%256), (qd_qtype/256)])
         data+=data_util.bytes2str([(qd_qclass%256), (qd_qclass/256)])

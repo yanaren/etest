@@ -25,8 +25,8 @@ def init_logging(file_path='test.log', log_level=logging.DEBUG):
 
     console = logging.StreamHandler()
     console.setLevel(log_level)
-    formatter = ConsoleLogFormatter('%(asctime)s;%(funcName)-10s: '
-                                  '%(levelname)-8s %(message)s',
+    formatter = ConsoleLogFormatter('%(asctime)s;'
+                                  '%(levelname)-5s %(message)s',
                                   "%H:%M:%S.%f")
     console.setFormatter(formatter)
 

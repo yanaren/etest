@@ -287,7 +287,12 @@ def startPharos():
     return 'True'
 
 
-# deploy test environment, 
+# 
+# config = {'vs': {'vs_ip':1.1.1.1, 'address_type': 0, 'vs_port':53, 'host_name': 'cm6', 'in_use': 1, 'no_check': 1, 'available':1, 
+#                  'HC_type':0, 'itvl':30, 'timeout':30, 'retries':3, 'host': 'cm6', 'url':'index'},
+#           'pool': {'rr_ldns_limit':1, 'in_use': 1, 'available': 1, 'a6_available': 0, 'ttl':300, 'QueryType': 'A', 'vs':[]}, 
+#           'region': {'range': [], 'pool':[]}, 
+#           'wideip': {'url':'img01.taobaocdn.com.danuoyi.tbcache.com', 'pool': [], 'in_use': []}}
 def deploy(config):
     logger.debug("# Test # start to do the env deploy...")
 

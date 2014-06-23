@@ -1,12 +1,11 @@
-import ConfigParser, select, socket, time, os, struct
-import src.util.logger as logger
-import src.util.data_util as data_util
-from src.deploy import deploy
+# create by 2014.05
+# author junbao.kjb
+# low level socket for dns
 
-try:
-    import simplejson as json
-except ImportError:
-    import json
+import socket, time, os, struct
+import src.util.logger    as logger
+import src.util.data_util as data_util
+
 
 RECVBUFFER = 2048
 

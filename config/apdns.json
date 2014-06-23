@@ -9,14 +9,7 @@
     "DNS_PORT": 53,
     "DNS_HOST": "42.120.249.70",
     "DNS_TYPE": "UDP",
-    "DB_HOST" : "10.101.81.12",
-    "DB_USER" : "root",
-    "DB_PASS" : "welcome",
-    "DB_PORT" : 3306,
-    "DB_DATABASE": "dns_config",
     "Has_Setup" : "False",
     "DNS_TIMESTAMP": "%Y-%m-%d %H:%M:%S"
-  },
-  "tcheck": {},
-  "vs":{}
+  }
 }

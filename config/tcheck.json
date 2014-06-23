@@ -1,14 +1,13 @@
 {
   "environment":{
-    "tcp_timeout":30,
-    "Sniffer":"off",
-    "SLEEP_TIME": 1
+    "tcp_timeout": 30,
+    "Sniffer"    : "off",
+    "SLEEP_TIME" : 1,
+    "Has_Setup"  : "False"
   },
   "tcheck": {
     "master": {
       "TC_HOST": "10.101.81.12",
-      "TC_PORT": 5333,
-      "TC_TYPE": "UDP",
       "DB_HOST" : "10.101.81.12",
       "DB_USER" : "root",
       "DB_PASS" : "welcome",
@@ -17,8 +16,6 @@
     },
     "slave1": {
       "TC_HOST": "10.235.160.63",
-      "TC_PORT": 5333,
-      "TC_TYPE": "UDP",
       "DB_HOST" : "10.235.160.63",
       "DB_USER" : "root",
       "DB_PASS" : "welcome",
@@ -27,8 +24,6 @@
     },
     "slave2": {
       "TC_HOST": "10.235.160.73",
-      "TC_PORT": 5333,
-      "TC_TYPE": "UDP",
       "DB_HOST" : "10.235.160.73",
       "DB_USER" : "root",
       "DB_PASS" : "welcome",
@@ -37,8 +32,6 @@
     },
     "slave3": {
       "TC_HOST": "10.235.160.83",
-      "TC_PORT": 5333,
-      "TC_TYPE": "UDP",
       "DB_HOST" : "10.235.160.83",
       "DB_USER" : "root",
       "DB_PASS" : "welcome",
@@ -62,8 +55,5 @@
       "port"   : 8008,
       "uri"    : "/status"
     }
-  },
-  "cmd": {
-    
   }
 }

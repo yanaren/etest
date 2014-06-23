@@ -53,10 +53,10 @@ def copy_file_2_server(ip, srcfile, dstfile):
     (_, username, _) = execute_cmd('whoami')
     if username[-1] == '\n':
         username = username[0:-1]
-    #cmd = 'scp %s %s@%s:%s' % (srcfile, username, ip, dstfile)
     cmd = 'scp %s root@%s:%s' % (srcfile, ip, dstfile)
     (returncode, output, stderr) = execute_cmd(cmd)
     return (returncode == 0)
+
 
 def ping(host, count=5):
     '''
@@ -76,32 +76,19 @@ def port_avaliable(host, port, retry=10):
     return: 
         True - Success, False - No reply or others
     '''
-    
     avaliable = False
     while retry > 0:
         try:
-            #logger.debug('Try to connect to %s:%s', host, port)
             return_code = execute_cmd('nc -w 5 -z %s %s' % (host,port))[0]
             if return_code == 0:
                 avaliable = True
                 break
         except Exception as inst:
-            #logger.error("Unexpected error:%s; when checking port %s:%s" % 
-            #             (inst, host, port))
             pass
         finally:
             time.sleep(1)
             retry -= 1
     return avaliable
-
-
-def check_ip_port_avaliable():
-    '''
-    check the ip_port is opened now
-    '''
-    avaliable = False
-    
-    return avaliabe
 
 
 def shasum_file(file_name):
@@ -138,6 +125,7 @@ def md5sum_file(file_name):
     return cs.hexdigest()
 
 
+# condition time wait, max wait, every min wait check.
 def timer_wait(sleep_time_span, max_sleep_time, condition):
     sleep_time = 0
     while sleep_time < max_sleep_time:

@@ -33,7 +33,6 @@ class RuntimeConfig(object):
         file_content = file_object.read()
         cls.config = json.loads(file_content)
 
-
 CONFIG=RuntimeConfig().config
 
 if CONFIG.has_key('environment'):

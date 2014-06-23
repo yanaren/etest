@@ -1,4 +1,4 @@
-
+# make sure DB info is right before use this tool
 import MySQLdb as mdb
 from src.deploy import DB
 
@@ -10,7 +10,6 @@ def execute(DB, sql):
                           passwd=DB['DB_PASS'],
                           db=DB['DB_DATABASE'],
                           port=DB['DB_PORT']);
-
         cur = con.cursor()
         cur.execute(sql)
         if sql.split(' ')[0] == 'insert' or sql.split(' ')[0] == 'update':

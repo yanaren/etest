@@ -1,10 +1,4 @@
-import inspect
-import os
-import logging
-import logging.handlers
-import pytest
-import datetime
-import unittest
+import inspect, pytest
 
 try:
     import simplejson as json  # pylint: disable=F0401

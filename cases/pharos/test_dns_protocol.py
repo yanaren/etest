@@ -25,13 +25,6 @@ def teardown_function(function):
     print ("teardown_function:%s" % function.__name__)
 
 
-
-def test_raw_query():
-    data = '\xd7\x76\x01\x00\x00\x01\x00\x00\x00\x00\x00\x00\x05\x69\x6d\x67\x30\x31\x09\x74\x61\x6f\x62\x61\x6f\x63\x64\x6e\x03\x63\x6f\x6d\x07\x64\x61\x6e\x75\x6f\x79\x69\x07\x74\x62\x63\x61\x63\x68\x65\x03\x63\x6f\x6d\x00\x00\x01\x00\x01'
-    check = { 'an_rdata': ['10.235.160.93'] }
-    assert DNS.send_raw_dns(data, 'UDP', check)
-    logger.debug("# Test # test stopped and success!")
-
 def test_A():
     logger.debug("# Test # start to do the env deploy...")
     dns   = { 'qd':[{'qd_qname':'img01.taobaocdn.com.danuoyi.tbcache.com'}] }

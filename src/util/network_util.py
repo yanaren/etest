@@ -22,5 +22,3 @@ def validate_ip(ip):
     except:
         return False
 
-#print get_ips('0.0.0.0 1.2.3.4 255.0.0.0 0.0.0.255 '
-#              'xxxx8.8.8.8yyy 1.2.3. 2.3.4.512')
