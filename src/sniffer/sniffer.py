@@ -1,18 +1,17 @@
 import threading, subprocess
+from src.util import system_util
 #import dpkt, pcap
-t=None
 
 def capture(card, host, port, pro, file):
-    global t
     t = threading.Thread(target=cap, args=(card, host, port, pro, file))
     t.start()
-    return t
-
-def cap(card, host, port, pro, file):
-    cmd = 'sudo tcpdump ' + pro + ' port ' + port + ' and host ' + host + ' -s0 -i ' + card + ' -w ' + file
-    p=subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-def join():
-    #cmd = 'sudo killall -9 tcpdump'
-    #popen=subprocess.Popen(['bash','-c',cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     t.join()
+def cap(card, host, port, pro, file):
+    cmd = 'sudo tcpdump -U ' + pro + ' port ' + port + ' and host ' + host + ' -s0 -i ' + card + ' -w ' + file + ' &'
+    subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    #system_util.execute_cmd(cmd)
+    
+
+def end():
+    cmd = 'sudo killall tcpdump'
+    subprocess.Popen(cmd, shell=True, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)

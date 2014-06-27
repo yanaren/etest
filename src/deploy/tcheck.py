@@ -35,7 +35,7 @@ def parse_vs(config):
         if vs[i].has_key('host_name'):
             host_name = vs[i]['host_name']
         else:
-            host_name = 'vkvm160053.sqa.cm6'
+            host_name = 'vkvm160053.sqa.cm6;'
         if vs[i].has_key('in_use'):
             in_use = vs[i]['in_use']
         else:
@@ -55,7 +55,7 @@ def parse_vs(config):
         if vs[i].has_key('itvl'):
             itvl = vs[i]['itvl']
         else:
-            itvl = 30
+            itvl = 10
         if vs[i].has_key('timeout'):
             timeout = vs[i]['timeout']
         else:
@@ -71,7 +71,7 @@ def parse_vs(config):
         if vs[i].has_key('url'):
             url = vs[i]['url']
         else:
-            url = '/index.html'
+            url = '/index.html;'
         vs_item = {'vs_ip': ip, 'address_type': address_type, 'vs_port': port, 'host_name': host_name,
                    'in_use': in_use, 'no_check': no_check, 'available': available, 'HC_type': HC_type, 
                    'itvl':itvl, 'timeout':timeout, 'retries': retries, 'host': host, 'url':url}
@@ -151,19 +151,22 @@ def write_vs2DB():
 # restart all vs
 def restart_all_vs():
     ips_vs = []
+    log_in = '#Deploy# Start vs '
     for vs in vs_conf:
         ips_vs.append(vs_conf[vs]['vs_ip'])
+        log_in += '(' + vs +': ' + vs_conf[vs]['vs_ip'] + '), '
     stop_nginx(ips_vs)
     start_nginx(ips_vs)
+    logger.debug(log_in)
 
 # start vs(nginx), input: ['vs1', 'vs2']
 def start_vs(vss):
     for vs in vss:
         ip = vs_conf[vs]['vs_ip']
         if vs_conf[vs]['HC_type'] == 0: 
-            logger.debug("# Test # started vs(tcp check): "+ip)
+            logger.debug('# Test # Started vs(tcp check): (' + vs +': ' + ip + '), ')
         elif vs_conf[vs]['HC_type'] == 1:
-            logger.debug("# Test # started vs(http check): "+ip)
+            logger.debug('# Test # Started vs(http check): (' + vs +': ' + ip + '), ')
         start_nginx([ip])
 
 def start_nginx(ips):
@@ -181,13 +184,13 @@ def stop_vs(vss):
     for vs in vss:
         ip = vs_conf[vs]['vs_ip']
         if vs_conf[vs]['HC_type'] == 0:
-            logger.debug("# Test # stopped vs(tcp check): "+ip)
+            logger.debug('# Test # stopped vs(tcp check): ('+ vs + ': ' + ip + '), ')
         elif vs_conf[vs]['HC_type'] == 1:
-            logger.debug("# Test # stopped vs(http check): "+ip)
+            logger.debug('# Test # stopped vs(http check): ('+ vs + ': ' + ip + '), ')
         stop_nginx([ip])
 def stop_nginx(ips):
-    cmd = 'killall -9 /usr/local/nginx/sbin/nginx'
-    nginx_run = 'ps -ef |grep /usr/local/nginx/sbin/nginx | wc -l'
+    cmd = 'killall -9 nginx'
+    nginx_run = 'ps -ef |grep nginx | wc -l'
     for ip in ips:
         system_util.exe_cmd_via_ssh(ip, cmd)
         system_util.exe_cmd_via_ssh(ip, nginx_run)
@@ -213,18 +216,20 @@ def start_all_tcheck():
 
 # start tchecks in: ['master', 'slave1', 'slave2']
 def start_tcheck(checkers):
-    cmd     = '/home/admin/pharos/bin/tcheck -f /home/admin/pharos/conf/tcheck.conf'
+    cmd     = ''
     dstfile = '/home/admin/pharos/conf/tcheck.conf'
-    tc_run  = 'ps -ef |grep tcheck | grep \'/home/admin/pharos/\' | awk \'{print $2}\''
+    tc_run  = 'ps -ef |grep tcheck | grep \'/home/admin/pharos/\''
     for item in checkers:
         if item == 'master':
+            cmd     = '/home/admin/pharos/bin/tcheck_master -f /home/admin/pharos/conf/tcheck.conf'
             ip      = tcheck_master['TC_HOST']
             srcfile = '~/project/etest/config/pharos/tcheck_master_'+ str(len(tcheck_slave)) + '.conf'
-            continue
+            #continue
         else:
+            cmd     = '/home/admin/pharos/bin/tcheck_slave -f /home/admin/pharos/conf/tcheck.conf'
             ip = tcheck_slave[item]['TC_HOST']
             srcfile = '~/project/etest/config/pharos/tcheck_slave.conf'
-        logger.debug('#Deploy#  Copy ' + srcfile[30:-1] + ' to ' + ip)
+        logger.debug('#Deploy#  Copy ' + srcfile[30:] + ' to ' + ip)
         system_util.copy_file_2_server(ip, srcfile, dstfile)
         logger.debug('#Deploy#  Start tcheck at: ' + ip)
         system_util.exe_cmd_via_ssh(ip, cmd)
@@ -235,24 +240,31 @@ def start_tcheck(checkers):
 def stop_all_tcheck():
     checkers=[]
     checkers.append('master')
+    log_in = '#Deploy# Stop tcheck: (master: ' + tcheck_master['TC_HOST'] + '), '
     for slave in tcheck_slave:
         checkers.append(slave)
+        log_in += '(' + slave + ': ' + tcheck_slave[slave]['TC_HOST'] + '), '
     stop_tcheck(checkers)
+    logger.debug(log_in)
     return True
 
 # stop tchecks in: ['master', 'slave1', 'slave2']
 def stop_tcheck(checkers):
-    cmd = 'killall -9 tcheck'
-    tc_run = 'ps -ef |grep tcheck | grep \'/home/admin/pharos/\' | awk \'{print $2}\''
+    cmd = ''
+    tc_run = 'ps -ef |grep tcheck | grep \'/home/admin/pharos/\''
     for item in checkers:
         if item == 'master':
+            cmd = 'killall -9 tcheck_master'
             ip = tcheck_master['TC_HOST']
-            continue
+            #continue
         else:
+            cmd = 'killall -9 tcheck_slave'
             ip = tcheck_slave[item]['TC_HOST']
         system_util.exe_cmd_via_ssh(ip, cmd)
         output = system_util.exe_cmd_via_ssh(ip, tc_run)
         assert (output[0].find('/home/admin/pharos/bin/tcheck') == -1)
+        #logger.debug("#Deploy# Stop tcheck: (" + item + ': ' + ip + '), ')
+
 
 # deploy the test 
 def deploy(config):
@@ -296,7 +308,7 @@ def check_tcheck_install(ips):
 
 # do some prepare work before test
 def start_check():
-    logger.debug("Test setup (check DB running, install tcheck)")
+    logger.debug("# Test # Setup before test (check DB running, tcheck installation)")
     if ENV['Has_Setup'] == 'True':
         return 'True'
     tcheck_master = CONFIG['tcheck']['master']
@@ -318,13 +330,13 @@ def start_check():
    
 
 # condition time check
-def check_db(vs_in, max_time = 30):
-    logger.debug('# test # check result: '+str(vs_in))
+def check_db(vs_in, max_time = 100):
+    logger.debug('# test # check result: ' + str(vs_in) + ' is Expected!')
     sleep_time = 0
     sleep_time_span = 3
     while sleep_time < max_time:
         if check_vs(vs_in):
-            info = '# test # check result: ' + str(vs_in) + ' is Expected!' 
+            info = '# test # check result: ' + str(vs_in) + ' is Right!' 
             logger.debug(info)
             return True
         else:
@@ -351,8 +363,8 @@ def check_vs(vs_in):
 
 
 # sleep func for tcheck
-def sleep(sec):
-    info = '# test # Wait for ' + str(sec) + ' seconds...'
+def sleep(sec, info=''):
+    info = '# test # Wait ' + info + 'for ' + str(sec) + ' seconds...'
     logger.debug(info)
     time.sleep(sec)
 

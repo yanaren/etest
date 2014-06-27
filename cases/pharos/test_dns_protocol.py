@@ -20,7 +20,7 @@ def setup_function(function):
             'pool'  :{'WangTong_Beijing_Pool': {'rr_ldns_limit': 1, 'in_use':1, 'available':1, 'ttl':300, 'QueryType':'A', 'vs': [('vs1', 1)]}},
             'region':{'WangTong_Beijing_Region': {'range':[('10.235.160.53', '10.235.160.53')], 'pool': [('WangTong_Beijing_Pool', 100)]}},
             'wideip':{'wideip1': {'url':'img01.taobaocdn.com.danuoyi.tbcache.com', 'pool': ['WangTong_Beijing_Pool']}}
-            }
+    }
 def teardown_function(function):
     print ("teardown_function:%s" % function.__name__)
 
@@ -30,6 +30,6 @@ def test_A():
     dns   = { 'qd':[{'qd_qname':'img01.taobaocdn.com.danuoyi.tbcache.com'}] }
     check = { 'an_rdata': [('10.235.160.93', 1)]}
     pharos.deploy(config)
-    assert  DNS.do_dns(config, dns, check)
+    DNS.do_dns(dns, check)
     
 
