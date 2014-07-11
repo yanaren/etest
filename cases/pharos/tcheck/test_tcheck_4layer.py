@@ -11,6 +11,7 @@ def setup_module(module):
 def teardown_module(module):
     logger.debug("# Test # Teardown Module:%s" % module.__name__)
 def setup_function(function):
+    print ''
     logger.debug("# Test # Setup Function:%s" % function.__name__)
     global conf
     conf = {
@@ -135,7 +136,7 @@ def test_3tcheck_3vs_1down_1TCOK_09():
     tcheck.check_db([('vs1', 1), ('vs2', 1), ('vs3', 1)])
     logger.debug("# Test # test stopped and success!!!")
 
-# 3 tcheck, 3 vs, 1 vs down, 1 tcheck ok
+# 3 tcheck, 3 vs, 1 vs down, 2 tcheck ok
 def test_3tcheck_3vs_1down_2TCOK_10():
     tcheck.deploy(conf)
     tcheck.stop_tcheck(['slave3'])
@@ -147,7 +148,7 @@ def test_3tcheck_3vs_1down_2TCOK_10():
     tcheck.check_db([('vs1', 1), ('vs2', 1), ('vs3', 1)])
     logger.debug("# Test # test stopped and success!!!")
 
-
+'''
 # 3 tcheck, itvl=10, timeout=10, retries=2, 3 sec start
 def test_3tcheck_10itvl_3start_11():
     conf['vs'] = {'vs1': {'vs_ip': '10.235.160.66', 'host_name':'vkvm160066.sqa.cm6', \
@@ -203,6 +204,6 @@ def test_3tcheck_itvl10_to10_13():
     tcheck.sleep(5)
     tcheck.check_vs([('vs1', 0), ('vs2', 1), ('vs3', 1)])
     logger.debug("# Test # test stopped and success!!!")
-
+'''
 
 

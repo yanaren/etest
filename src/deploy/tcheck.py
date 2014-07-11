@@ -82,8 +82,9 @@ def parse_vs(config):
 # parse tcheck config, conf must contains 'master', 'slave'
 def parse_tcheck(conf):
     global tcheck_master, tcheck_slave
+    tcheck_master = {}
+    tcheck_slave  = {}
     tcheck_master = TCHECK[conf['tcheck']['master']]
-
     for tc in conf['tcheck']['slave']:
         tcheck_slave[tc] = TCHECK[tc]
     return True
@@ -164,9 +165,9 @@ def start_vs(vss):
     for vs in vss:
         ip = vs_conf[vs]['vs_ip']
         if vs_conf[vs]['HC_type'] == 0: 
-            logger.debug('# Test # Started vs(tcp check): (' + vs +': ' + ip + '), ')
+            logger.debug('# Test # Start vs(tcp check): (' + vs +': ' + ip + '), ')
         elif vs_conf[vs]['HC_type'] == 1:
-            logger.debug('# Test # Started vs(http check): (' + vs +': ' + ip + '), ')
+            logger.debug('# Test # Start vs(http check): (' + vs +': ' + ip + '), ')
         start_nginx([ip])
 
 def start_nginx(ips):
@@ -184,9 +185,9 @@ def stop_vs(vss):
     for vs in vss:
         ip = vs_conf[vs]['vs_ip']
         if vs_conf[vs]['HC_type'] == 0:
-            logger.debug('# Test # stopped vs(tcp check): ('+ vs + ': ' + ip + '), ')
+            logger.debug('# Test # stop vs(tcp check): ('+ vs + ': ' + ip + '), ')
         elif vs_conf[vs]['HC_type'] == 1:
-            logger.debug('# Test # stopped vs(http check): ('+ vs + ': ' + ip + '), ')
+            logger.debug('# Test # stop vs(http check): ('+ vs + ': ' + ip + '), ')
         stop_nginx([ip])
 def stop_nginx(ips):
     cmd = 'killall -9 nginx'
@@ -213,6 +214,24 @@ def start_all_tcheck():
     for slave in tcheck_slave:
         checkers.append(slave)
     start_tcheck(checkers)
+
+# start 206 tchecks in: ['slave1', 'slave2']
+def start_206_tcheck(checkers):
+    stop_tcheck(checkers)
+    cmd     = ''
+    dstfile = '/home/admin/pharos/conf/tcheck.conf'
+    tc_run  = 'ps -ef |grep tcheck | grep \'/home/admin/pharos/\''
+    for item in checkers:
+        cmd     = '/home/admin/pharos/bin/tcheck_slave -f /home/admin/pharos/conf/tcheck.conf'
+        ip = tcheck_slave[item]['TC_HOST']
+        srcfile = '~/project/etest/config/pharos/tcheck_slave_206.conf'
+        logger.debug('#Deploy#  Copy ' + srcfile[30:] + ' to ' + ip)
+        system_util.copy_file_2_server(ip, srcfile, dstfile)
+        logger.debug('#Deploy#  Start tcheck at: ' + ip)
+        system_util.exe_cmd_via_ssh(ip, cmd)
+        output = system_util.exe_cmd_via_ssh(ip, tc_run)
+        assert (output[0].find('/home/admin/pharos/bin/tcheck') != -1)
+
 
 # start tchecks in: ['master', 'slave1', 'slave2']
 def start_tcheck(checkers):
@@ -269,10 +288,13 @@ def stop_tcheck(checkers):
 # deploy the test 
 def deploy(config):
     logger.debug("# Test # Start to do the deploy...")
-    if parse(config) != True:
-        return False
     logger.debug("#Deploy# Stop all tcheck...")
     if stop_all_tcheck() != True:
+        return False
+    tcheck_master={}
+    tcheck_slave ={}
+
+    if parse(config) != True:
         return False
     logger.debug("#Deploy# Restart all vs...")
     restart_all_vs()
@@ -299,7 +321,7 @@ def check_DB_running(ips):
             return False
     return True
 def check_tcheck_install(ips):
-    cmd = 'file /home/admin/pharos/bin/tcheck'
+    cmd = 'file /home/admin/pharos/bin/tcheck*'
     for ip in ips:
         resp = system_util.exe_cmd_via_ssh(ip, cmd)
         if resp[0].find('ERROR') != -1:
@@ -308,6 +330,7 @@ def check_tcheck_install(ips):
 
 # do some prepare work before test
 def start_check():
+    global tcheck_master, tcheck_slave
     logger.debug("# Test # Setup before test (check DB running, tcheck installation)")
     if ENV['Has_Setup'] == 'True':
         return 'True'
@@ -323,9 +346,8 @@ def start_check():
         ips.append(tcheck_slave[slave]['DB_HOST'])
     assert check_DB_running(ips)
     assert check_tcheck_install(ips)
+    stop_all_tcheck()
     ENV['Has_Setup'] = 'True'
-    tcheck_master={}
-    tcheck_slave ={}
     return True
    
 

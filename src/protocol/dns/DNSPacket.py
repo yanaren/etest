@@ -254,13 +254,14 @@ class DNSPacket:
             iter += 2
             qd_item = {'qd_name': tmp_name, 'qd_type': qdtype, 'qd_class': qdclass}
             self.qd.append(qd_item)
-            
+         
         self.an=[]; tmp_name=''
         for i in range(0, self.ancount):
             (tmp_name, iter)=self.get_name(data, iter)
-            #iter +=1
+            iter +=1
             antype = struct.unpack('>H', data[iter:iter+2])[0]
             iter += 2
+            
             # A type
             if antype == 1:
                 anclass = struct.unpack('>H', data[iter:iter+2])[0]
@@ -277,6 +278,7 @@ class DNSPacket:
                 rdata = str(add1) + '.' + str(add2) + '.' + str(add3) + '.' + str(add4)
                 an_item = {'an_name': tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_rdata': rdata}
                 self.an.append(an_item)
+                
             # NS & CNAME type
             elif antype == 2 or antype == 5:
                 anclass = struct.unpack('>H', data[iter:iter+2])[0]
@@ -375,19 +377,21 @@ class DNSPacket:
     def get_name(self, data, iter):
         tmp_name=''; added=0
         seglen=struct.unpack('>B', data[iter])[0]
-        while seglen != 0 and seglen != 192:
-            tmp_name += data[iter+1:iter+seglen+1] + '.'
-            iter=iter+seglen+1
-            added += seglen+1
-            seglen=struct.unpack('>B', data[iter])[0]
-
-        if seglen == 192:
-            iter += 1
-            pos=struct.unpack('>B', data[iter])[0]
-            (tmp, num) = self.get_name(data, pos)
-            iter += 1
-            tmp_name += tmp
-            tmp_name += tmp_name[-1]
+        while seglen != 0:
+            if seglen == 192:
+                iter += 1
+                pos=struct.unpack('>B', data[iter])[0]
+                (tmp, num) = self.get_name(data, pos)
+                iter += 1
+                tmp_name += tmp
+                tmp_name += tmp_name[-1]
+                seglen=struct.unpack('>B', data[iter])[0]
+                iter -= 1
+            else:
+                tmp_name += data[iter+1:iter+seglen+1] + '.'
+                iter=iter+seglen+1
+                added += seglen+1
+                seglen=struct.unpack('>B', data[iter])[0]
 
         tmp_name=tmp_name[0:-1]
         return (tmp_name, iter)

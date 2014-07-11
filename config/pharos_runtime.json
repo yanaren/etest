@@ -1,0 +1,61 @@
+{
+  "environment":{
+    "tcp_timeout":30,
+    "Sniffer":"off",
+    "SLEEP_TIME": 1
+  },
+  "dns":{
+    "pharos": {
+      "pharos1": {
+        "DNS_PORT": 53,
+        "DNS_HOST": "10.101.81.120",
+        "DNS_TYPE": "UDP",
+        "DB_HOST" : "10.101.81.120",
+        "DB_USER" : "root",
+        "DB_PASS" : "welcome",
+        "DB_PORT" : 3306,
+        "DB_DATABASE": "dns_config"
+      },
+      "pharos2": {
+        "DNS_PORT": 53,
+        "DNS_HOST": "10.101.81.121",
+        "DNS_TYPE": "UDP",
+        "DB_HOST" : "10.101.81.121",
+        "DB_USER" : "root",
+        "DB_PASS" : "welcome",
+        "DB_PORT" : 3306,
+        "DB_DATABASE": "dns_config"
+      },
+      "pharos3": {
+        "DNS_PORT": 53,
+        "DNS_HOST": "10.101.81.122",
+        "DNS_TYPE": "UDP",
+        "DB_HOST" : "10.101.81.122",
+        "DB_USER" : "root",
+        "DB_PASS" : "welcome",
+        "DB_PORT" : 3306,
+        "DB_DATABASE": "dns_config"
+      }
+    },
+    "Pharos_org": "config/pharos/pharos.conf",
+    "pharos_dst": "/home/admin/pharos/conf/pharos.conf",
+    "dbinit_org": "config/pharos/dns.sql",
+    "dbinit_dst": "/home/admin/pharos/conf/dns.sql",
+    "create_org": "config/pharos/create_table.sql",
+    "create_dst": "/home/admin/pharos/conf/create_table.sql",
+    "stored_org": "config/pharos/ph_stored_routines.sql",
+    "stored_dst": "/home/admin/pharos/conf/ph_stored_routines.sql",
+    "proced_org": "config/pharos/callProcedure.sql",
+    "proced_dst": "/home/admin/pharos/conf/callProcedure.sql",
+    "Has_Setup" : "False",
+    "DNS_TIMESTAMP": "%Y-%m-%d %H:%M:%S"
+  },
+  "cmos": {
+      "CMOS_HOST": "10.101.81.118",
+      "CMOS_PORT": 8325
+  },
+  "queue": {
+      "QUEUE_HOST": "10.101.81.119",
+      "QUEUE_PORT": 5333
+  }
+}

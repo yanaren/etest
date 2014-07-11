@@ -1,8 +1,8 @@
 # make sure DB info is right before use this tool
 import MySQLdb as mdb
-from src.deploy import DB
+from src.deploy import DB, DNS
 
-def execute(DB, sql):
+def execute(DB, sql=''):
     con = None
     try:
         con = mdb.connect(host=DB['DB_HOST'],

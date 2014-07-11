@@ -84,15 +84,19 @@ def do_dns(input, check, times=1):
                     logger.debug("# Test # result Error: result is not expected")
                     raise
 
-    if check.has_key('an_rdata'):
+    # if check an_rdata(ip addr etc.), give detail info
+    if result != False and check.has_key('an_rdata'):
+        msg = ''
         for item in RDATA_NUM:
             Total_DNS += RDATA_NUM[item]
+            msg += '\n                               ' + item + ': ' + str(RDATA_NUM[item]) + ' times'
         for item in check['an_rdata']:
             tmp = RDATA_NUM[item[0]]/float(Total_DNS)
             if item[1] < tmp-0.1 or item[1] > tmp+0.1:
                 logger.debug("# Test # result Error: %s has about %f in totally", item[0], tmp)
                 result = False
-
+        msg += '\n                               Result check Successful:' + str(check)
+        logger.debug('# Test # DNS Response for query to: ' + server_ip + ':' + str(server_port) + msg)
     assert result
 
 

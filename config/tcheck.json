@@ -15,8 +15,8 @@
       "DB_DATABASE": "tcheck_db"
     },
     "slave1": {
-      "TC_HOST": "10.235.160.63",
-      "DB_HOST" : "10.235.160.63",
+      "TC_HOST": "10.125.57.150",
+      "DB_HOST" : "10.125.57.150",
       "DB_USER" : "root",
       "DB_PASS" : "welcome",
       "DB_PORT" : 3306,

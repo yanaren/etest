@@ -45,3 +45,7 @@ if CONFIG.has_key('tcheck'):
     DB    = {}
 if CONFIG.has_key('vs'):
     VS    = CONFIG['vs']
+if CONFIG.has_key('cmos'):
+    CMOS  = CONFIG['cmos']
+if CONFIG.has_key('queue'):
+    QUEUE = CONFIG['queue']

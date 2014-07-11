@@ -136,4 +136,3 @@ def timer_wait(sleep_time_span, max_sleep_time, condition):
             time.sleep(sleep_time_span)
     return False
 
-
