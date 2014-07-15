@@ -116,6 +116,12 @@ def parse_pool(config):
                 type = 2
             elif pool[i]['QueryType'] == 'SRV':
                 type = 33
+            elif pool[i]['QueryType'] == 'AAAA':
+                type = 28
+            elif pool[i]['QueryType'] == 'SOA':
+                type = 6
+            elif pool[i]['QueryType'] == 'PTR':
+                type = 12
         else:
             type = 1
         if pool[i].has_key('vs'):
@@ -318,6 +324,14 @@ def startPharos():
     thread.start_new_thread(system_util.exe_cmd_via_ssh, (DNS['DNS_HOST'], cmd))
     return True
 
+
+def restartPharos():
+    stopPharos()
+    startPharos()
+def copyfile(src, dst):
+    system_util.copy_file_2_server(DNS['DNS_HOST'], src, dst)
+def exe_cmd(cmd):
+    system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], cmd)
 
 # 
 # config = {'vs': {'vs_ip':1.1.1.1, 'address_type': 0, 'vs_port':53, 'host_name': 'cm6', 'in_use': 1, 'no_check': 1, 'available':1, 

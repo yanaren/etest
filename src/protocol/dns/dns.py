@@ -88,11 +88,13 @@ def do_dns(input, check, times=1):
                         result = False
                 #
                 else:
-                    for expect in check[item]:
-                        try:
-                            pos = ans.index(expect) 
-                        except:
-                            result = False
+                    if check[item] not in ans:
+                        result = False
+                    #for expect in check[item]:
+                    #    try:
+                    #        pos = ans.index(expect) 
+                    #    except:
+                    #        result = False
                 if result == False:
                     logger.debug("# Test # result Error: result is not expected")
                     raise

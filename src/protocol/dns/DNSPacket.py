@@ -4,7 +4,7 @@
 #DNS parser
 #
 
-import re, struct, types
+import re, struct, types, binascii
 
 
 '''
@@ -117,7 +117,16 @@ class DNSPacket:
         for item in self.an:
             tmp.append(item['an_name'])
         return tmp
-
+    def get_an_prins(self):
+        tmp = []
+        for item in self.an:
+            tmp.append(item['an_prins'])
+        return tmp
+    def get_an_respmail(self):
+        tmp = []
+        for item in self.an:
+            tmp.append(item['an_respmail'])
+        return tmp
     def get_ns(self):
         return self.ns
 
@@ -237,13 +246,17 @@ class DNSPacket:
         self.z     = (low >> 4)  & 0x07
         self.rcode = low         & 0x0F
         iter += 2
-    
+
+        if self.rcode == 1:
+            return True
+
         self.qdcount=struct.unpack('>H', data[iter:iter+2])[0]
         self.ancount=struct.unpack('>H', data[iter+2:iter+4])[0]
         self.nscount=struct.unpack('>H', data[iter+4:iter+6])[0]
         self.arcount=struct.unpack('>H', data[iter+6:iter+8])[0]
+        
         iter += 8
-
+       
         self.qd=[]; tmp_name=''
         for i in range(0, self.qdcount):
             (tmp_name, iter)=self.get_name(data, iter)
@@ -277,7 +290,31 @@ class DNSPacket:
                 rdata = str(add1) + '.' + str(add2) + '.' + str(add3) + '.' + str(add4)
                 an_item = {'an_name': tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_rdata': rdata}
                 self.an.append(an_item)
-                
+            # AAAA type
+            elif antype == 28: 
+                anclass = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                anttl =  struct.unpack('>I', data[iter:iter+4])[0]
+                iter += 4
+                anlen = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                i = 0; ipv6 = ''
+                while i < anlen:
+                    tmp1 = struct.unpack('B', data[iter])[0]
+                    tmp2 = struct.unpack('B', data[iter+1])[0]
+                    tmp3 =  str(hex(tmp1))[2:]
+                    tmp4 = str(hex(tmp2))[2:]
+                    if len(tmp4) == 1 and tmp3 != '0':
+                        tmp4 = '0'+tmp4
+                    if tmp3 == '0':
+                        ipv6 += (tmp4 +':')
+                    else:
+                        ipv6 += (tmp3+tmp4 +':')
+                    i +=2
+                    iter+=2
+                rdata = ipv6[0:-1]
+                an_item = {'an_name': tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_rdata':rdata}
+                self.an.append(an_item)
             # NS & CNAME type
             elif antype == 2 or antype == 5:
                 
@@ -291,19 +328,20 @@ class DNSPacket:
                 an_item = {'an_name': tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_rdata': rdata}
                 self.an.append(an_item)
                 iter+=1
-                
             # SOA type
             elif antype == 6:
                 anclass = struct.unpack('>H', data[iter:iter+2])[0]
                 anclass &= 0x7fff
-                ancache &= 0x8000
+                #ancache &= 0x8000
                 iter += 2
                 anttl = struct.unpack('>I', data[iter:iter+4])[0]
                 iter += 4
                 anlen = struct.unpack('>H', data[iter:iter+2])[0]
                 iter += 2
                 (anpns, iter)=self.get_name(data, iter)
+                iter +=1
                 (anram, iter)=self.get_name(data, iter)
+                iter +=1
                 ansn =  struct.unpack('>I', data[iter:iter+4])[0]
                 iter += 4
                 anri = struct.unpack('>I', data[iter:iter+4])[0]
@@ -314,9 +352,25 @@ class DNSPacket:
                 iter += 4
                 anml = struct.unpack('>I', data[iter:iter+4])[0]
                 iter += 4
-                an_item = {'an_name':tmp_name, 'an_type': antype, 'an_class': anclass, 'an_cache': ancache, 'an_ttl': anttl, 'an_len': anlen, 'an_prins': anpns, 'an_respmail': anram, 'an_sn': ansn, 'an_refint': anri, 'an_retint': anrin, 'an_exlim': anel, 'an_mimttl':anml}
+                an_item = {'an_name':tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_prins': anpns, 'an_respmail': anram, 'an_sn': ansn, 'an_refint': anri, 'an_retint': anrin, 'an_exlim': anel, 'an_mimttl':anml}
                 self.an.append(an_item)
-
+            elif antype == 33:
+                anclass = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                anttl =  struct.unpack('>I', data[iter:iter+4])[0]
+                iter += 4
+                anlen = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                anpri = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                anweight = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                anport = struct.unpack('>H', data[iter:iter+2])[0]
+                iter += 2
+                (antarget, iter)=self.get_name(data, iter)
+                iter += 1
+                an_item = {'an_name':tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_pri':anpri, 'an_weight': anweight, 'an_port': anport, 'an_rdata': antarget}
+                self.an.append(an_item)
 
         self.ns=[]; tmp_name=''
         for i in range(0, self.nscount):
