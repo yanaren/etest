@@ -261,7 +261,6 @@ class DNSPacket:
             iter +=1
             antype = struct.unpack('>H', data[iter:iter+2])[0]
             iter += 2
-            
             # A type
             if antype == 1:
                 anclass = struct.unpack('>H', data[iter:iter+2])[0]
@@ -281,6 +280,7 @@ class DNSPacket:
                 
             # NS & CNAME type
             elif antype == 2 or antype == 5:
+                
                 anclass = struct.unpack('>H', data[iter:iter+2])[0]
                 iter += 2
                 anttl =  struct.unpack('>I', data[iter:iter+4])[0]
@@ -290,6 +290,8 @@ class DNSPacket:
                 (rdata, iter)=self.get_name(data, iter)
                 an_item = {'an_name': tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_rdata': rdata}
                 self.an.append(an_item)
+                iter+=1
+                
             # SOA type
             elif antype == 6:
                 anclass = struct.unpack('>H', data[iter:iter+2])[0]
@@ -374,6 +376,7 @@ class DNSPacket:
 
 
     ''' parse query name in DNS format'''
+    #
     def get_name(self, data, iter):
         tmp_name=''; added=0
         seglen=struct.unpack('>B', data[iter])[0]

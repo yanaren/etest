@@ -21,7 +21,7 @@ def execute(DB, sql=''):
         if con:
             con.close()
 
-def callproc(callname, args):
+def callproc(DB, callname, args):
     con = None
     try:
         con = mdb.connect(host=DB['DB_HOST'],

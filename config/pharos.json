@@ -6,7 +6,7 @@
   },
 
   "dns":{
-    "DNS_PORT": 5333,
+    "DNS_PORT": 53,
     "DNS_HOST": "10.101.81.12",
     "DNS_TYPE": "UDP",
     "DB_HOST" : "10.101.81.12",

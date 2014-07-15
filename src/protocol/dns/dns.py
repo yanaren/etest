@@ -59,18 +59,31 @@ def do_dns(input, check, times=1):
                         RDATA_NUM[data] = 1
             # simple logical with '> < !='
             else:
+                if -1 != item.find('total_'):
+                    continue
+
                 func = getattr(dns, 'get_'+item)
                 ans = func()
                 if -1 == item.find('_'):
-                    if check[item][0] == '>':
-                        if ans <= int(check[item][1:]):
+                    if type(check[item]) is str and check[item][0] == '>':
+                        if check[item][1] == '=':
+                            if ans < int(check[item][2:]):
+                                result = False
+                        elif ans <= int(check[item][1:]):
                             result = False
-                    elif check[item][0] == '<':
+                    elif type(check[item]) is str and check[item][0] == '<':
                         if ans >= int(check[item][1:]):
                             result = False
-                    elif check[item][0] == '!':
+                    elif type(check[item]) is str and check[item][0] == '!':
                         if ans == int(check[item][1:]):
                             result = False
+                    elif type(check[item]) is str and check[item].find('|') != -1:
+                        result = False
+                        for tmp in check[item].split('|'):
+                            if str(ans) == tmp:
+                                result = True
+                        if result == False:
+                            print ans
                     elif ans != check[item]:
                         result = False
                 #
@@ -97,6 +110,15 @@ def do_dns(input, check, times=1):
                 result = False
         msg += '\n                               Result check Successful:' + str(check)
         logger.debug('# Test # DNS Response for query to: ' + server_ip + ':' + str(server_port) + msg)
+
+    if result != False and check.has_key('total_rdata'):
+        if type(check['total_rdata']) is str and check['total_rdata'][0] == '>':
+            result = (Total_DNS > check['total_rdata'][1:])
+        elif type(check['total_rdata']) is str and check['total_rdata'][0] == '<':
+            result = (Total_DNS < check['total_rdata'][1:])
+        else:
+            result = (Total_DNS == check['total_rdata'])
+
     assert result
 
 

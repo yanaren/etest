@@ -2,12 +2,6 @@
 Created by 2014.05
 Author junbao.kjb
 
-Function:
-1. startPharos()
-2. stopPharos()
-3. installPharos()
-4. unstallPharos()
-5. deploy()  // save to db
 '''
 import thread, socket, struct, time
 import src.util.system_util as system_util
@@ -20,9 +14,6 @@ vs_conf      = {}
 pool_conf    = {}
 region_conf  = {}
 wideip_conf  = {}
-tcheck_master= {}
-tcheck_slave = {}
-rs_list      = []
 
 # parse config for virtual server
 def parse_vs(config):
@@ -34,7 +25,7 @@ def parse_vs(config):
         if vs[i].has_key('vs_ip'):
             ip = vs[i]['vs_ip']
         else:
-            ip = '10.235.160.53'
+            ip = '10.235.160.93'
         if vs[i].has_key('address_type'):
             address_type = vs[i]['address_type']
         else:
@@ -46,7 +37,7 @@ def parse_vs(config):
         if vs[i].has_key('host_name'):
             host_name = vs[i]['host_name']
         else:
-            host_name = 'vkvm160053.sqa.cm6'
+            host_name = 'vkvm160093.sqa.cm6'
         if vs[i].has_key('in_use'):
             in_use = vs[i]['in_use']
         else:
@@ -115,18 +106,28 @@ def parse_pool(config):
         if pool[i].has_key('ttl'):
             ttl = pool[i]['ttl']
         else:
-            ttl = 1
+            ttl = 300
         if pool[i].has_key('QueryType'):
             if pool[i]['QueryType'] == 'A':
                 type = 1
+            elif pool[i]['QueryType'] == 'CName':
+                type = 5
+            elif pool[i]['QueryType'] == 'NS':
+                type = 2
+            elif pool[i]['QueryType'] == 'SRV':
+                type = 33
         else:
             type = 1
         if pool[i].has_key('vs'):
             vs = pool[i]['vs']
         else:
             vs = []
+        if pool[i].has_key('value'):
+            value = pool[i]['value']
+        else:
+            value = 'null'
         pool_item = {'rr_ldns_limit': limit, 'in_use': in_use, 'available': available, 
-                     'a6_available':a6_available, 'ttl':ttl, 'QueryType':type, 'vs': vs}
+                     'a6_available':a6_available, 'ttl':ttl, 'QueryType':type, 'vs': vs, 'value':value}
         pool_conf[name] = pool_item
 
 # parse region config
@@ -144,7 +145,19 @@ def parse_region(config):
             pool = region[i]['pool']
         else:
             pool = []
-        region_item = {'range': rang, 'pool': pool}
+        if region[i].has_key('pri'):
+            pri = region[i]['pri']
+        else:
+            pri = 1
+        if region[i].has_key('complename'):
+            complename = region[i]['complename']
+        else:
+            complename = ()
+        if region[i].has_key('childregion'):
+            childregion = region[i]['childregion']
+        else:
+            childregion = []
+        region_item = {'range': rang, 'pool': pool, 'pri':pri, 'complename': complename, 'childregion': childregion}
         region_conf[name] = region_item
 
 # parse wideip config
@@ -172,11 +185,17 @@ def parse_wideip(config):
 
 # parse configuration for DB setting
 def parse(config):
+    global vs_conf, pool_conf, region_conf, wideip_conf
+    vs_conf      = {}
+    pool_conf    = {}
+    region_conf  = {}
+    wideip_conf  = {}
+
     parse_vs(config)
     parse_pool(config)
     parse_region(config)
     parse_wideip(config)
-    return 'True'
+    return True
 
 
 # clean DB for pharos
@@ -184,8 +203,8 @@ def cleanDB():
     tables = ["pool","pool_region","pool_vs","region_ip","region_region","vs","wideip_pool","datacenter"]
     for item in tables:
         sql = 'delete from ' + item
-        db.execute(sql)
-    return 'True'
+        db.execute(DNS, sql)
+    return True
 
 
 # save vs conf to db
@@ -196,7 +215,7 @@ def write_vs2DB():
                (\"' + vs['host_name'] + '\", \"' + vs['vs_ip'] + '\", ' + str(vs['address_type']) + ', ' + str(vs['in_use']) + ', ' + \
                str(vs['no_check']) + ', ' + str(vs['available']) + ', ' +  str(vs['HC_type']) + ', ' + str(vs['itvl'] ) + ', ' + str(vs['timeout']) + \
                ', ' + str(vs['retries']) + ', ' +  str(vs['vs_port']) + ', \"' + vs['host'] + '\", \"' + vs['url'] + '\")'
-        db.execute(sql)
+        db.execute(DNS, sql)
 
 
 # sava pool conf to db
@@ -205,33 +224,46 @@ def write_pool2DB():
         pool = pool_conf[pool_name]
         sql = 'insert into pool (name,rr_ldns_limit,in_use,available,a6_available,ttl,type,value) values (\"' + \
                pool_name + '\", ' + str(pool['rr_ldns_limit']) + ', ' + str(pool['in_use']) + ', ' + str(pool['available']) + \
-               ', ' + str(pool['a6_available']) + ', ' + str(pool['ttl']) + ', ' + str(pool['QueryType']) + ', \"null\")'
-        db.execute(sql) 
+               ', ' + str(pool['a6_available']) + ', ' + str(pool['ttl']) + ', ' + str(pool['QueryType']) + ', \"' +pool['value'] + '\")'
+        db.execute(DNS, sql) 
         for vs in pool['vs']:
             vs_name = vs[0]
             vs_ratio= vs[1]
             sql = 'insert into pool_vs (pool_name,vs_address,ratio) values (\"' + pool_name + '\", \"' + vs_conf[vs_name]['vs_ip'] + '\", ' + str(vs_ratio) + ')'
-            db.execute(sql) 
+            db.execute(DNS, sql) 
 
 
 # save region config to db
 def write_region2DB():
     for region_name in region_conf:
         region = region_conf[region_name]
+        # for comple_region
+        if region_name[0] == '!':
+            sql = 'insert into comple_region (original_name,comple_name) values (\"' + region['complename'][0] + '\", \"' + region['complename'][1] + '\")'
+            db.execute(DNS, sql) 
+
         for pool in region['pool']:
             pool_name = pool[0]
             pool_ratio = pool[1]
             sql = 'insert into pool_region (region_name,pool_name,score) values (\"' + region_name + '\", \"' + pool_name + '\", ' + str(pool_ratio) + ')'
-            db.execute(sql) 
+            db.execute(DNS, sql) 
 
-        sql = 'insert into region_region (big_region,small_region,relation) values (\"' + region_name + '\", \"' + region_name + '\", 0)'
-        db.execute(sql) 
+        # insert region_region for common region
+        sql = 'insert into region_region (big_region,small_region,relation) values (\"'+region_name+'\", \"' + region_name + '\", 0)'
+        db.execute(DNS, sql) 
+
+        # insert region_region for big region
+        if len(region['childregion']) != 0:
+            for i in range(0, len(region['childregion'])):
+                sql = 'insert into region_region (big_region,small_region,relation) values (\"'+region_name+'\", \"' + region['childregion'][i] + '\", 0)'
+                db.execute(DNS, sql)
+
         for rang in region['range']:
             packedIP = socket.inet_aton(rang[0])
             ipstart = struct.unpack("!L", packedIP)[0]
             packedIP  = socket.inet_aton(rang[1])
             ipstop  = struct.unpack("!L", packedIP)[0]
-            db.callproc('add_region_ip', [region_name, ipstart, ipstop, 1])
+            db.callproc(DNS, 'add_region_ip', [region_name, ipstart, ipstop, region['pri']])
 
 
 # save wideip conf to db
@@ -240,7 +272,7 @@ def write_wideip2DB():
         wideip = wideip_conf[wideip_name]
         for pool in wideip['pool']:
             sql = 'insert into wideip_pool (wideip_name,pool_name, in_use) values (\"' + wideip['url'] + '\", \"' + pool + '\", ' + str(wideip['in_use']) + ')'
-            db.execute(sql) 
+            db.execute(DNS, sql) 
 
 
 # save configuration to db
@@ -249,34 +281,34 @@ def write2DB():
     write_pool2DB()
     write_region2DB()
     write_wideip2DB()
-    return 'True'
+    return True
 
 
 # copy file to pharos machine, initial DB, 
 def initPharos():
-    logger.debug("# Deploy # copy %s to pharos %s...", DNS['Pharos_org'], DNS['DNS_HOST'])
+    #logger.debug("#Deploy# copy %s to pharos %s...", DNS['Pharos_org'], DNS['DNS_HOST'])
     system_util.copy_file_2_server(DNS['DNS_HOST'], DNS['Pharos_org'], DNS['pharos_dst'])
-    logger.debug("# Deploy # copy %s to pharos %s...", DNS['dbinit_org'], DNS['DNS_HOST'])
+    #logger.debug("#Deploy# copy %s to pharos %s...", DNS['dbinit_org'], DNS['DNS_HOST'])
     system_util.copy_file_2_server(DNS['DNS_HOST'], DNS['dbinit_org'], DNS['dbinit_dst'])
-    logger.debug("# Deploy # copy %s to pharos %s...", DNS['create_org'], DNS['DNS_HOST'])
+    #logger.debug("#Deploy# copy %s to pharos %s...", DNS['create_org'], DNS['DNS_HOST'])
     system_util.copy_file_2_server(DNS['DNS_HOST'], DNS['create_org'], DNS['create_dst'])
-    logger.debug("# Deploy # copy %s to pharos %s...", DNS['stored_org'], DNS['DNS_HOST'])
+    #logger.debug("#Deploy# copy %s to pharos %s...", DNS['stored_org'], DNS['DNS_HOST'])
     system_util.copy_file_2_server(DNS['DNS_HOST'], DNS['stored_org'], DNS['stored_dst'])
-    logger.debug("# Deploy # copy %s to pharos %s...", DNS['proced_org'], DNS['DNS_HOST'])
+    #logger.debug("#Deploy# copy %s to pharos %s...", DNS['proced_org'], DNS['DNS_HOST'])
     system_util.copy_file_2_server(DNS['DNS_HOST'], DNS['proced_org'], DNS['proced_dst'])
 
-    logger.debug("# Deploy # intial Databases...")
-    db.execute('drop database dns_config;drop database dns_config2;drop database dns_config3;') 
+    #logger.debug("#Deploy# intial Databases...")
+    db.execute(DNS, 'drop database dns_config;drop database dns_config2;drop database dns_config3;') 
     cmd = '/usr/bin/mysql -uroot -pwelcome < /home/admin/pharos/conf/dns.sql'
     system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], cmd)
     system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], '/usr/bin/mysql -uroot -pwelcome < /home/admin/pharos/conf/create_table.sql')
     system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], '/usr/bin/mysql -uroot -pwelcome < /home/admin/pharos/conf/ph_stored_routines.sql')
-    return 'True'
+    return True
 
 def stopPharos():
     cmd = 'killall -9 pharos'
     system_util.exe_cmd_via_ssh(DNS['DNS_HOST'], cmd)
-    return 'True'
+    return True
  
 def startPharos():
     cmd = '/usr/bin/mysql -uroot -pwelcome < /home/admin/pharos/conf/callProcedure.sql '
@@ -284,7 +316,7 @@ def startPharos():
 
     cmd = '/home/admin/pharos/bin/pharos -c /home/admin/pharos/conf/pharos.conf '
     thread.start_new_thread(system_util.exe_cmd_via_ssh, (DNS['DNS_HOST'], cmd))
-    return 'True'
+    return True
 
 
 # 
@@ -294,33 +326,36 @@ def startPharos():
 #           'region': {'range': [], 'pool':[]}, 
 #           'wideip': {'url':'img01.taobaocdn.com.danuoyi.tbcache.com', 'pool': [], 'in_use': []}}
 def deploy(config):
-    logger.debug("# Test # start to do the env deploy...")
+    logger.debug("# Test # Start to deploy...")
 
-    logger.debug("# Deploy # stopPharos...")
-    if stopPharos() != 'True':
-        return 'False'
+    if stopPharos() != True:
+        return False
+    logger.debug("#Deploy# Stop Pharos2 befor test Successful!")
 
-    logger.debug("# Deploy # cleanDB...")
-    if cleanDB() != 'True':
-        return 'False'
+    if cleanDB() != True:
+        return False
+    logger.debug("#Deploy# Clean DB Successful!")
 
-    if parse(config) != 'True':
-        return 'False'
+    if parse(config) != True:
+        return False
 
     # copy config file, initial db 
-    logger.debug("# Deploy # copy file, initail db...")
-    if initPharos() != 'True':
-        return 'False'
+    if initPharos() != True:
+        return False
+    logger.debug('#Deploy# Copy config file to: ' + DNS['DNS_HOST'] + ', adn initial DB Successful')
 
-    logger.debug("# Deploy # save config db...")
-    if write2DB() != 'True':
-        return 'False'
+    if write2DB() != True:
+        return False
+    logger.debug('#Deploy# Save Test config to :' + DNS['DNS_HOST'] + ' Successful!')
 
-    logger.debug("# Deploy # start pharos...")
-    if startPharos() != 'True':
-        return 'False'
+    if startPharos() != True:
+        return False
+    logger.debug("#Deploy# Start to run Pharos2...")
 
-    return 'True'
+    logger.debug("#Deploy# wait 5 seconds to stable pharos...")
+    time.sleep(5)
+
+    return True
 
 
 def checkDBRunning(ips):
@@ -328,8 +363,8 @@ def checkDBRunning(ips):
     for ip in ips:
         resp = system_util.exe_cmd_via_ssh(ip, cmd)
         if resp[0].find('running') == -1:
-            return 'False'
-    return 'True'
+            return False
+    return True
 
 def installPharos():
     cmd = 'yum install t-pharos2 -b test -y'
@@ -338,13 +373,13 @@ def installPharos():
 
 # do some prepare work before test
 def setup():
-    if DNS['Has_Setup'] == 'True':
-        return 'True'
+    if DNS['Has_Setup'] == True:
+        return True
     logger.debug("Test setup (check DB running, install pharos)")
     checkDBRunning([DNS['DNS_HOST']])
     installPharos()
-    DNS['Has_Setup'] = 'True'
-    return 'True'
+    DNS['Has_Setup'] = True
+    return True
 
 def setDNS(dns_conf):
     if dns_conf.has_key('DNS_HOST'):

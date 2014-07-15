@@ -1,13 +1,7 @@
 '''
-Created by 2014.05
+Created by 2014.07
 Author junbao.kjb
 
-Function:
-1. startPharos()
-2. stopPharos()
-3. installPharos()
-4. unstallPharos()
-5. deploy()  // save to db
 '''
 import thread, socket, struct, time
 import src.util.system_util as system_util
@@ -304,7 +298,7 @@ def stopAllPharos():
     for ph in DNS['pharos']:
         DNS['DNS_HOST']    = DNS['pharos'][ph]['DNS_HOST']
         stopPharos()
-        logger.debug("#Deploy# stop Pharos in %s...", DNS['DNS_HOST'])
+        logger.debug("#Deploy# Stop Pharos in %s...", DNS['DNS_HOST'])
     return True
 
 def stopPharos():
@@ -317,8 +311,8 @@ def stopPharos():
 def startAllPharos():
     for ph in DNS['pharos']:
         DNS['DNS_HOST']    = DNS['pharos'][ph]['DNS_HOST']
+        logger.debug("#Deploy# Start Pharos on %s...", DNS['DNS_HOST'])
         startPharos()
-        logger.debug("#Deploy# Start Pharos in %s...", DNS['DNS_HOST'])
     return True
 
 # use < /dev/null > /tmp/mylogfile 2>&1, it works, but don't know why
@@ -334,13 +328,13 @@ def startPharos():
 def checkCMOSQUEUE():
     cmd = 'ps -ef | grep hekad'
     resp = system_util.exe_cmd_via_ssh(CMOS['CMOS_HOST'], cmd)
-    if resp[0].find('/home/admin/heka/sbin/hekad') == -1:
+    if str(resp).find('/home/admin/heka/sbin/hekad') == -1:
         logger.debug("# ERROR # CMOS is not running in host:" + CMOS['CMOS_HOST'])
         return False
     cmd = 'ps -ef | grep rabbitmq-server'
     resp = system_util.exe_cmd_via_ssh(QUEUE['QUEUE_HOST'], cmd)
-    if resp[0].find('/usr/local/bin/rabbitmq-server') == -1:
-        logger.debug("# ERROR # rabbitmq is not running in host:" + QUEUE['QUEUE_HOST'])
+    if str(resp).find('/usr/local/bin/rabbitmq-server') == -1:
+        logger.debug("# ERROR # Rabbitmq is not running in host:" + QUEUE['QUEUE_HOST'])
         return False
     return True
 
@@ -353,16 +347,16 @@ def checkCMOSQUEUE():
 #           'region': {'range': [], 'pool':[]}, 
 #           'wideip': {'url':'img01.taobaocdn.com.danuoyi.tbcache.com', 'pool': [], 'in_use': []}}
 def deploy(config):
-    logger.debug("# Test # start to do the deploy...")
+    logger.debug("# Test # Start to deploy...")
 
     if stopAllPharos() != True:
         return False
     logger.debug("#Deploy# Stop all pharos Sucessful!")
 
-    logger.debug("#Deploy# clean All DB(pharos)...")
+    logger.debug("#Deploy# Clean All DB(pharos)...")
     if cleanAllDB() != True:
         return False
-    logger.debug("#Deploy# clean All DB(pharos) Sucessful!")
+    logger.debug("#Deploy# Clean All DB(pharos) Sucessful!")
 
     if parse(config) != True:
         return False
@@ -370,21 +364,21 @@ def deploy(config):
     # copy config file, initial db 
     if initAllPharos() != True:
         return False
-    logger.debug("#Deploy# copy file to pharos, initail db(pharos) Sucessful!")
+    logger.debug("#Deploy# Copy file to pharos, initail db(pharos) Sucessful!")
 
-    logger.debug("#Deploy# save pharos config to db...")
+    logger.debug("#Deploy# Save pharos config to db...")
     if write2AllDB() != True:
         return False
-    logger.debug("#Deploy# save pharos config to db Successful!")
+    logger.debug("#Deploy# Save pharos config to db Successful!")
 
-    logger.debug("#Deploy# check CMOS & QUEUE is running...")
+    logger.debug("#Deploy# Check CMOS & QUEUE is running...")
     if checkCMOSQUEUE() != True:
         return False
-    logger.debug("#Deploy# check CMOS & QUEUE is running Successful!")
+    logger.debug("#Deploy# Check CMOS & QUEUE is running Successful!")
 
     if startAllPharos() != True:
         return False
-    logger.debug("#Deploy# start all pharos Successful!")
+    logger.debug("#Deploy# Start all pharos Successful!")
 
     logger.debug("#Deploy# Wait 5 seconds to stable all pharos...")
     time.sleep(5)
@@ -407,7 +401,7 @@ def installPharos():
 def setup():
     if DNS['Has_Setup'] == 'True':
         return True
-    logger.debug("Test setup (check DB running, install pharos)")
+    logger.debug("# Test # Setup (check DB running, install pharos)")
     checkDBRunning([DNS['DNS_HOST']])
     installPharos()
     DNS['Has_Setup'] = True
