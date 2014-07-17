@@ -18,7 +18,6 @@ def send_packet(data, para):
     server_ip = para[2]
     server_port = para[3]
     sockettype = para[4]
-
     socket_type=socket.SOCK_DGRAM
     if sockettype != 'UDP':
         socket_type = socket.SOCK_STREAM
@@ -81,6 +80,8 @@ def send_multi_dns(data, para):
                 t_bps -= 1
                 t_inter = int((t_stop-t_start).total_seconds()*100)
             send_mode = False
+            #now  = datetime.datetime.now()
+            #print 'speed: ', float(dns_sent*1000)/int((now-m_start).total_seconds()*1000)
         else:
             now  = datetime.datetime.now()
             if 100 <= int((now-send_start).total_seconds()*1000):

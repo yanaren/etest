@@ -8,7 +8,7 @@
   "dns":{
     "DNS_PORT": 53,
     "DNS_HOST": "10.101.81.12",
-    "DNS_TYPE": "UDP",
+    "SOCKET_TYPE": "UDP",
     "DB_HOST" : "10.101.81.12",
     "DB_USER" : "root",
     "DB_PASS" : "welcome",

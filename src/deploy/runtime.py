@@ -14,9 +14,6 @@ vs_conf      = {}
 pool_conf    = {}
 region_conf  = {}
 wideip_conf  = {}
-tcheck_master= {}
-tcheck_slave = {}
-rs_list      = []
 
 # parse config for virtual server
 def parse_vs(config):

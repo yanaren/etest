@@ -224,19 +224,22 @@ class DNSPacket:
     def decode(self, data, dns_type):
         iter=0
         self.DATA_LEN=len(data)
+        self.dns_type = 'UDP'
         if dns_type == 'TCP':
+            self.dns_type = 'TCP'
             high=struct.unpack('B', data[iter])[0]
             low= struct.unpack('B', data[iter+1])[0]
-            length =high*256 + low 
+            length =high*256 + low
             if length+2 != len(data):
                 raise
             iter += 2
-
+            
         self.id=struct.unpack('>H', data[iter:iter+2])[0]
         iter += 2
-
-        high=struct.unpack('B', data[2])[0]
-        low= struct.unpack('B', data[3])[0]
+        
+        high=struct.unpack('B', data[iter])[0]
+        low= struct.unpack('B', data[iter+1])[0]
+        
         self.qr    = (high >> 7)
         self.opcode= (high >> 3) & 0x0F
         self.aa    = (high >> 2) & 0x01
@@ -246,8 +249,7 @@ class DNSPacket:
         self.z     = (low >> 4)  & 0x07
         self.rcode = low         & 0x0F
         iter += 2
-
-        if self.rcode == 1:
+        if self.tc == 1 or self.rcode == 1:
             return True
 
         self.qdcount=struct.unpack('>H', data[iter:iter+2])[0]
@@ -256,7 +258,6 @@ class DNSPacket:
         self.arcount=struct.unpack('>H', data[iter+6:iter+8])[0]
         
         iter += 8
-       
         self.qd=[]; tmp_name=''
         for i in range(0, self.qdcount):
             (tmp_name, iter)=self.get_name(data, iter)
@@ -313,6 +314,7 @@ class DNSPacket:
                     i +=2
                     iter+=2
                 rdata = ipv6[0:-1]
+                #iter +=3
                 an_item = {'an_name': tmp_name, 'an_type': antype, 'an_class': anclass, 'an_ttl': anttl, 'an_len': anlen, 'an_rdata':rdata}
                 self.an.append(an_item)
             # NS & CNAME type
@@ -438,18 +440,20 @@ class DNSPacket:
             if seglen == 192:
                 iter += 1
                 pos=struct.unpack('>B', data[iter])[0]
+                if self.dns_type == 'TCP':
+                    pos += 2
                 (tmp, num) = self.get_name(data, pos)
-                iter += 1
+                #iter += 1
                 tmp_name += tmp
                 tmp_name += tmp_name[-1]
-                seglen=struct.unpack('>B', data[iter])[0]
-                iter -= 1
+                break
+                #seglen=struct.unpack('>B', data[iter])[0]
+                #iter -= 1
             else:
                 tmp_name += data[iter+1:iter+seglen+1] + '.'
                 iter=iter+seglen+1
                 added += seglen+1
                 seglen=struct.unpack('>B', data[iter])[0]
-
         tmp_name=tmp_name[0:-1]
         return (tmp_name, iter)
 

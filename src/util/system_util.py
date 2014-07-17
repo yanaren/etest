@@ -28,8 +28,6 @@ def exe_cmd_via_ssh(ip, cmd):
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     returncode = proc.wait()
     output = proc.stdout.read().splitlines()
-    #logger.debug('Return Code:%s' % returncode)
-    #logger.debug('Output:%s' % ('\n'.join(output)))
     return output
 
 

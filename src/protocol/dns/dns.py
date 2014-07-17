@@ -12,8 +12,8 @@ from   src.util.logger            import logger
 from   src.protocol.dns.DNSPacket import DNSPacket
 
 
-# input={ 'DNS_HOST': DNS['DNS_HOST'], 'DNS_PORT': DNS['DNS_PORT'], 'DNS_TYPE': DNS['DNS_TYPE'], 'data': data}  or
-# input={ 'DNS_HOST': DNS['DNS_HOST'], 'DNS_PORT': DNS['DNS_PORT'], 'DNS_TYPE': DNS['DNS_TYPE'], 'id': 1, 'qr': 0, 
+# input={ 'DNS_HOST': DNS['DNS_HOST'], 'DNS_PORT': DNS['DNS_PORT'], 'SOCKET_TYPE': DNS['SOCKET_TYPE'], 'data': data}  or
+# input={ 'DNS_HOST': DNS['DNS_HOST'], 'DNS_PORT': DNS['DNS_PORT'], 'SOCKET_TYPE': DNS['SOCKET_TYPE'], 'id': 1, 'qr': 0, 
 #         'opcode':0,'aa': 0,'tc':0,'rd':1,'ra':0,'z':0,'rcode':0,'qdcount': 1,'ancount':0,'nscount':0,'arcount': 0, 
 #         'qd':[{'qd_qname':'img01.taobaocdn.com.danuoyi.tbcache.com', 'qd_qtype': 1, 'qd_qclass': 1}] },
 #         'an':[{'an_rclass': 1, 'an_ttl':1, 'an_rrname': 'www.taobao.com', 'an_rdata': '1.1.1.1', 'an_type': 1}]
@@ -21,7 +21,7 @@ from   src.protocol.dns.DNSPacket import DNSPacket
 # check = { 'qdcount':>2, 'an_rclass':1, 'an_rdata': [('10.235.160.93', 0.5), ('10.235.160.83', 0.5)]}
 def do_dns(input, check, times=1):
     RDATA_NUM={}; Total_DNS = 0; result = True
-    resp = ''; server_ip = ''; server_port = 53; dns_type = 'UDP'
+    resp = ''; server_ip = ''; server_port = 53; sock_type = 'UDP'
     if input.has_key('DNS_HOST'):
         server_ip=input['DNS_HOST']
     else:
@@ -30,23 +30,23 @@ def do_dns(input, check, times=1):
         server_port=input['DNS_PORT']
     else:
         server_port = DNS['DNS_PORT']
-    if input.has_key('DNS_TYPE'):
-        dns_type = input['DNS_TYPE']
+    if input.has_key('SOCKET_TYPE'):
+        sock_type = input['SOCKET_TYPE']
     else:
-        dns_type = DNS['DNS_TYPE']
+        sock_type = DNS['SOCKET_TYPE']
     logger.debug('# Test # start to send DNS query to:' + server_ip + ':' + str(server_port) + ' for '+ str(times) + ' times...')
 
     # send DNS query for times
     for i in range(0, times):
         # send raw data
         if input.has_key('data'):
-            resp = alisocket.send_packet(input['data'], ('', '', server_ip, server_port, dns_type))
+            resp = alisocket.send_packet(input['data'], ('', '', server_ip, server_port, sock_type))
         # send fromat dns data
         else:
             resp = send_dns(input)
 
         # decode DNS packet
-        dns = DNSPacket(resp, dns_type)
+        dns = DNSPacket(resp, sock_type)
         for item in check:
             # check an_rdata (special)
             if item == 'an_rdata':
@@ -82,8 +82,6 @@ def do_dns(input, check, times=1):
                         for tmp in check[item].split('|'):
                             if str(ans) == tmp:
                                 result = True
-                        if result == False:
-                            print ans
                     elif ans != check[item]:
                         result = False
                 #
@@ -143,14 +141,14 @@ def send_dns(input):
         server_port=input['DNS_PORT']
     else:
         server_port = DNS['DNS_PORT']
-    if input.has_key('DNS_TYPE'):
-        sockettype = input['DNS_TYPE']
+    if input.has_key('SOCKET_TYPE'):
+        sock_type = input['SOCKET_TYPE']
     else:
-        sockettype = DNS['DNS_TYPE']
-    if input.has_key('dnstype'):
-        dns_type=input['dnstype']
-    else:
-        dns_type='UDP'
+        sock_type = DNS['SOCKET_TYPE']
+    #if input.has_key('dnstype'):
+    #    dns_type=input['dnstype']
+    #else:
+    #    dns_type='UDP'
     if input.has_key('id'):
         id=input['id']
     else:
@@ -270,7 +268,7 @@ def send_dns(input):
         data+=data_util.bytes2str([(qd_qclass%256), (qd_qclass/256)])
 
     #logger.debug("# Test # send DNS query to %s:%d", DNS['DNS_HOST'], DNS['DNS_PORT'])
-    recd = alisocket.send_packet(data, ('', '', server_ip, server_port, dns_type))
+    recd = alisocket.send_packet(data, ('', '', server_ip, server_port, sock_type))
 
     return recd
 
